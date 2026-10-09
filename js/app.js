@@ -1088,13 +1088,9 @@ setTimeout(grRemoveDuplicateClassText,0);
       const cfg=currentConfig(),result=nameEngine.generate(cfg,3);
       state.results=result.names;
       renderResults();
-      status.textContent=result.exhausted
-        ? (cfg.style==='clever'
-          ? 'You have seen all the Clever names for these settings. Try turning off Class Themed, choosing another race or class, or switching styles. No filler names or repeats.'
-          : 'You have explored all remaining names for these settings. Change your race, class theme, or style to keep forging.')
-        : result.persistent
-          ? 'Three fresh names. Previously shown names stay excluded in this browser, even after a refresh.'
-          : 'Three fresh names. History cannot be saved right now; repeat protection lasts until you close or refresh this page.';
+      status.textContent=result.persistent
+        ? 'Keep forging. Unseen names come first; familiar names can return after you explore the pool.'
+        : 'Keep forging. Unseen names come first during this visit; familiar names can return as you explore.';
     }catch(error){
       status.textContent='Could not forge names. Please reload the page and try again.';
       console.error('Name Forge:',error);
