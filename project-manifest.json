@@ -7,6 +7,8 @@
   "scripts": [
     "data/characters.js",
     "data/names.js",
+    "data/name-grammar.js",
+    "js/name-engine.js",
     "js/analytics.js",
     "js/app.js",
     "js/campfire.js"

@@ -1044,31 +1044,13 @@ setTimeout(grRemoveDuplicateClassText,0);
 
 /* ===== gr-name-forge-js ===== */
 (()=>{
-  const {RACE_FIRST,RACE_LAST,SERIOUS_FIRST,SERIOUS_LAST,CLASS_SERIOUS,GENERAL_CLEVER,GENERAL_SILLY,GENERAL_RAUNCHY,CLASS_CLEVER,CLASS_SILLY,CLASS_RAUNCHY}=window.GR_NAME_DATA;
   const F=id=>document.getElementById(id);
-  const uniq=a=>[...new Set((a||[]).filter(Boolean))];
-  const pick=a=>a[Math.floor(Math.random()*a.length)];
-  const chance=n=>Math.random()<n;
-  const cap=s=>String(s||'').charAt(0).toUpperCase()+String(s||'').slice(1);
-
-  
-  
-  
-  
-
-  
-
-  
-  
-  
-
-  
-  
-  
-
-  const state={style:'serious',results:[],lockFirst:'',lockLast:'',favorites:[],recent:[]};
-  try{state.favorites=JSON.parse(localStorage.getItem('great-reroll-name-forge-favorites-v1')||'[]')||[]}catch(e){}
-  try{state.recent=JSON.parse(sessionStorage.getItem('great-reroll-name-forge-recent-v5')||'[]')||[]}catch(e){}
+  const state={style:'serious',results:[]};
+  let historyStorage=null,legacyStorage=null;
+  try{historyStorage=window.localStorage}catch(e){}
+  try{legacyStorage=window.sessionStorage}catch(e){}
+  const nameEngine=window.GRNameEngine.create({data:window.GR_NAME_DATA,
+    grammar:window.GR_NAME_GRAMMAR,storage:historyStorage,legacyStorage});
 
   function currentConfig(){return {
     faction:F('forgeFaction').value,
@@ -1100,76 +1082,21 @@ setTimeout(grRemoveDuplicateClassText,0);
     const cfg=currentConfig();
     F('forgeModeSummary').innerHTML=`Current direction: <b>${escapeHtml(styleLabel(cfg.style))}</b> · <b>${escapeHtml(classThemeLabel(cfg.classTheme))}</b>${cfg.style!=='serious'?` · <b>${cfg.raunchy?'Raunchy humor ON':'Clean humor'}</b>`:''}`;
   }
-  function splitFull(full){const p=String(full).trim().split(/\s+/);return {first:p.shift()||'',last:p.join(' '),full:String(full).trim()}}
-  function compound(root,tail){return cap(root)+String(tail||'').toLowerCase()}
-  function seriousCandidate(cfg){
-    let firstPool=uniq([...(RACE_FIRST[cfg.race]||[]),...SERIOUS_FIRST]);
-    let lastPool=uniq([...(RACE_LAST[cfg.race]||[]),...SERIOUS_LAST]);
-    let first=pick(firstPool),last='';
-    if(cfg.classTheme){
-      const theme=CLASS_SERIOUS[cfg.cls]||CLASS_SERIOUS.Warrior;
-      for(let tries=0;tries<12;tries++){
-        const root=pick(theme.roots),tail=pick(theme.tails),candidate=compound(root,tail);
-        if(root.toLowerCase()!==tail.toLowerCase() && !candidate.toLowerCase().includes('bladeblade')){last=candidate;break}
-      }
-      if(!last)last=pick(lastPool);
-    }else last=pick(lastPool);
-    return {first,last,full:(first+' '+last).trim()};
-  }
-  function humorPool(cfg){
-    const base=cfg.style==='silly'?GENERAL_SILLY:GENERAL_CLEVER;
-    const classBase=cfg.style==='silly'?(CLASS_SILLY[cfg.cls]||[]):(CLASS_CLEVER[cfg.cls]||[]);
-    let pool=cfg.classTheme?[...classBase]:[...base];
-    if(cfg.raunchy){
-      pool.push(...GENERAL_RAUNCHY);
-      if(cfg.classTheme)pool.push(...(CLASS_RAUNCHY[cfg.cls]||[]));
-    }
-    return uniq(pool);
-  }
-  function humorCandidate(cfg){
-    const pool=humorPool(cfg);
-    let c=splitFull(pick(pool));
-    c.full=(c.first+(c.last?' '+c.last:'')).trim();
-    return c;
-  }
-  function buildCandidate(cfg){return cfg.style==='serious'?seriousCandidate(cfg):humorCandidate(cfg)}
-  function flowScore(c){
-    const chars=c.full.replace(/\s/g,'').length;
-    let score=Math.random()*4;
-    if(chars>=7&&chars<=18)score+=3;
-    if(c.first&&c.last&&c.first.toLowerCase()!==c.last.toLowerCase())score+=2;
-    return score;
-  }
-  function forgeOne(cfg,avoid=[],avoidLast=[]){
-    let best=null;
-    for(let i=0;i<70;i++){
-      const c=buildCandidate(cfg);
-      if(!c.full||avoid.includes(c.full)||state.recent.includes(c.full))continue;
-      let score=flowScore(c);
-      if(c.last&&avoidLast.includes(c.last))score-=12;
-      if(avoid.some(x=>x.split(/\s+/)[0]===c.first))score-=4;
-      if(!best||score>best.score)best={...c,score};
-    }
-    if(!best){
-      for(let i=0;i<30;i++){
-        const c=buildCandidate(cfg);
-        if(!c.full||avoid.includes(c.full))continue;
-        const score=flowScore(c)-(c.last&&avoidLast.includes(c.last)?8:0);
-        if(!best||score>best.score)best={...c,score};
-      }
-    }
-    if(!best)best={...buildCandidate(cfg),score:0};
-    return {...best,cfg:{...cfg}};
-  }
   function generateSet(){
-    // Name Forge intentionally refreshes the entire set every time.
-    state.lockFirst=''; state.lockLast='';
-    const cfg=currentConfig(),names=[],lasts=[];
-    for(let i=0;i<3;i++){const n=forgeOne(cfg,names.map(x=>x.full),lasts);names.push(n);if(n.last)lasts.push(n.last)}
-    state.results=names;
-    state.recent=uniq([...names.map(x=>x.full),...state.recent]).slice(0,80);
-    try{sessionStorage.setItem('great-reroll-name-forge-recent-v5',JSON.stringify(state.recent))}catch(e){}
-    renderResults();
+    const status=F('forgeGenerationStatus');
+    try{
+      const result=nameEngine.generate(currentConfig(),3);
+      state.results=result.names;
+      renderResults();
+      status.textContent=result.exhausted
+        ? 'You have explored all remaining names for these settings. Change your race, class theme, or style to keep forging.'
+        : result.persistent
+          ? 'Three fresh names. Previously shown names stay excluded in this browser, even after a refresh.'
+          : 'Three fresh names. History cannot be saved right now; repeat protection lasts until you close or refresh this page.';
+    }catch(error){
+      status.textContent='Could not forge names. Please reload the page and try again.';
+      console.error('Name Forge:',error);
+    }
   }
 
   function poolForFaction(){return F('forgeFaction').value==='Horde'?HORDE:ALLIANCE}
@@ -1178,11 +1105,7 @@ setTimeout(grRemoveDuplicateClassText,0);
   function paintCharacter(){
     const faction=F('forgeFaction').value,race=F('forgeRace').value,cls=F('forgeClass').value;if(!race||!cls)return;
     let ri='',ci='';try{ri=grRaceIcon(race,faction);ci=grClassIcon(cls)}catch(e){}
-    F('forgeCharacterPreview').innerHTML=`<div class="forge-character-icons">${ri?`<img src="${ri}" alt="${escapeHtml(race)}">`:''}${ci?`<img src="${ci}" alt="${escapeHtml(cls)}">`:''}</div><div class="forge-character-copy"><strong>${escapeHtml(race)} ${escapeHtml(cls)}</strong><small>${escapeHtml(faction)} · Character choice shapes Serious names; Class Theme makes class identity obvious.</small></div>`;
-  }
-  function renderLocks(){
-    const bits=[];if(state.lockFirst)bits.push(`First name locked: <b>${escapeHtml(state.lockFirst)}</b>`);if(state.lockLast)bits.push(`Last name locked: <b>${escapeHtml(state.lockLast)}</b>`);
-    F('forgeLockBar').querySelector('span').innerHTML=bits.length?bits.join(' · '):'No name parts locked.';F('forgeClearLocks').classList.toggle('hidden',!bits.length)
+    F('forgeCharacterPreview').innerHTML=`<div class="forge-character-icons">${ri?`<img src="${ri}" alt="${escapeHtml(race)}">`:''}${ci?`<img src="${ci}" alt="${escapeHtml(cls)}">`:''}</div><div class="forge-character-copy"><strong>${escapeHtml(race)} ${escapeHtml(cls)}</strong><small>${escapeHtml(faction)} · Race shapes every style; Class Theme adds your class identity.</small></div>`;
   }
   function renderResults(){
     F('forgeResults').innerHTML=state.results.map((r,i)=>{
@@ -1199,16 +1122,6 @@ setTimeout(grRemoveDuplicateClassText,0);
   function copyName(name){
     if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(name).catch(()=>{});
     const t=document.createElement('div');t.className='forge-copy-toast';t.textContent='Copied: '+name;document.body.appendChild(t);setTimeout(()=>t.remove(),1300)
-  }
-  function addFavorite(r){
-    if(!state.favorites.some(x=>x.full===r.full)){
-      state.favorites.unshift({full:r.full,race:r.cfg.race,cls:r.cfg.cls,type:styleLabel(r.cfg.style),style:`${classThemeLabel(r.cfg.classTheme)}${r.cfg.raunchy?' / Raunchy':''}`});
-      state.favorites=state.favorites.slice(0,40);try{localStorage.setItem('great-reroll-name-forge-favorites-v1',JSON.stringify(state.favorites))}catch(e){}renderFavorites()
-    }
-  }
-  function renderFavorites(){
-    F('forgeFavorites').innerHTML=state.favorites.length?state.favorites.map((x,i)=>`<div class="forge-fav"><strong>${escapeHtml(x.full)}</strong><small>${escapeHtml(x.race||'')} ${escapeHtml(x.cls||'')} · ${escapeHtml(x.type||'Saved')} · ${escapeHtml(x.style||'')}</small><button class="forge-text-btn" type="button" data-copy="${i}">Copy</button></div>`).join(''):'<div class="forge-empty">No favorites yet.<br>Forge a few names and save the ones that hit.</div>';
-    F('forgeFavorites').querySelectorAll('[data-copy]').forEach(b=>b.onclick=()=>copyName(state.favorites[+b.dataset.copy].full))
   }
   function openForge(){F('setup').classList.add('hidden');F('draft').classList.add('hidden');F('rollStage').classList.add('roll-hidden');F('nameForge').classList.remove('hidden');document.body.classList.add('name-forge-active');F('modeBadge').textContent='NAME FORGE';window.scrollTo({top:0,behavior:'smooth'});if(!state.results.length)generateSet()}
   function closeForge(){F('nameForge').classList.add('hidden');F('setup').classList.remove('hidden');document.body.classList.remove('name-forge-active');F('modeBadge').textContent='OFFLINE MODE';window.scrollTo({top:0,behavior:'smooth'})}
@@ -1234,7 +1147,7 @@ setTimeout(grRemoveDuplicateClassText,0);
   window.generateName=function(v){
     const race=v.race,cls=v.cls,faction=(window.draft&&draft.faction)||((HORDE[race]&&HORDE[race].includes(cls))?'Horde':'Alliance');
     const cfg={faction,race,cls,style:'serious',classTheme:true,raunchy:false};
-    return forgeOne(cfg).full;
+    return nameEngine.generate(cfg,1).names[0]?.full||'';
   };
 })();
 
