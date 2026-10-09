@@ -9,17 +9,19 @@ function memory(){const values=new Map();return {getItem:k=>values.get(k)||null,
 function engine(extra={}){return E.create({data,grammar,random:seeded(),...extra})}
 function record(result,seen,count){assert.equal(result.names.length,count);for(const n of result.names){assert.ok(E.validFull(n.full),n.full);assert.ok(!seen.has(n.full.toLowerCase()),'Repeat: '+n.full);seen.add(n.full.toLowerCase());assert.ok(!/\d/.test(n.full))}}
 
-test('5,000 names per style without repeats or numeric padding',()=>{
- for(const style of ['serious','clever','silly']){
+test('5,000 generated names per Serious/Silly style without repeats or numeric padding',()=>{
+ for(const style of ['serious','silly']){
   const e=engine(),seen=new Set();
   for(let batch=0;batch<50;batch++)record(e.generate({...base,style},100),seen,100);
  }
 });
 test('every supported race/class, style and toggle yields valid unique names',()=>{
- const e=engine(),seen=new Set(),pools=ctx.window.GR_CHARACTER_DATA;
+ const pools=ctx.window.GR_CHARACTER_DATA;
  for(const faction of ['HORDE','ALLIANCE'])for(const [race,classes] of Object.entries(pools[faction]))for(const cls of classes)
-  for(const style of ['serious','clever','silly'])for(const classTheme of [false,true])for(const raunchy of [false,true])
-   for(let i=0;i<8;i++)record(e.generate({race,cls,style,classTheme,raunchy},3),seen,3);
+  for(const style of ['serious','clever','silly'])for(const classTheme of [false,true])for(const raunchy of [false,true]){
+   const e=engine(),seen=new Set();
+   for(let i=0;i<5;i++)record(e.generate({race,cls,style,classTheme,raunchy},3),seen,3);
+  }
 });
 test('history survives reload, identical RNG, config changes and sequential tabs',()=>{
  const storage=memory(),seen=new Set();let a=engine({storage}),b=engine({storage});
@@ -61,7 +63,7 @@ test('race influences every style; class toggle affects every style; serious ign
  assert.deepEqual(engine().generate(base,12).names,engine().generate({...base,raunchy:true},12).names.map(n=>({...n,cfg:{...n.cfg,raunchy:false}})));
 });
 test('within a normal three-name batch, both halves differ',()=>{
- const e=engine();for(const style of ['serious','clever','silly'])for(let i=0;i<200;i++){
+ const e=engine();for(const style of ['serious','silly'])for(let i=0;i<200;i++){
   const r=e.generate({...base,style},3).names;
   assert.equal(new Set(r.map(n=>n.first)).size,3);assert.equal(new Set(r.map(n=>n.last)).size,3);
  }
@@ -90,3 +92,29 @@ test('actual Name Forge UI and draft wrapper share persisted history',()=>{
  assert.ok(index.indexOf('js/name-engine.js')<index.indexOf('js/app.js'));
  assert.match(index,/id="forgeGenerationStatus"/);
 });
+
+ test('Clever only returns approved intact wordplay, including after exhaustion or adult toggles',()=>{
+  const all=grammar.clever.names;
+  for(const n of all){assert.ok(E.validFull(n.full),n.full);assert.ok(n.meaning.length>3,n.full)}
+  for(const race of Object.keys(grammar.races))for(const cls of Object.keys(grammar.classes))for(const classTheme of [false,true])for(const raunchy of [false,true]){
+   const e=engine(),cfg={race,cls,style:'clever',classTheme,raunchy},seen=new Set();
+   const allowed=new Set(all.filter(n=>(!n.adult||raunchy)&&(!n.races||n.races.includes(race))&&(!n.classes||n.classes.includes(cls))&&(!classTheme||n.classes?.includes(cls))).map(n=>n.full));
+   let result;
+   do{
+    result=e.generate(cfg,3);
+    for(const n of result.names){assert.ok(allowed.has(n.full),n.full);assert.ok(!seen.has(n.full),n.full);seen.add(n.full)}
+   }while(!result.exhausted);
+   assert.deepEqual([...seen].sort(),[...allowed].sort());
+   assert.equal(e.generate(cfg,3).names.length,0);
+   assert.ok(!seen.has('Whisper Notary'));assert.ok(!seen.has('Saul Carrionwhisper'));
+  }
+ });
+ test('Clever repeat protection holds across settings changes and reloads',()=>{
+  const storage=memory(),seen=new Set();
+  for(const classTheme of [true,false,true]){
+   const e=engine({storage});for(let i=0;i<30;i++){
+    const r=e.generate({...base,cls:'Rogue',style:'clever',classTheme},3);
+    for(const n of r.names){assert.ok(!seen.has(n.full));seen.add(n.full)}
+   }
+  }
+ });

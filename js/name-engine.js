@@ -11,7 +11,7 @@
   const normalize=s=>s.trim().toLowerCase().replace(/\s+/g,' ');
   const uniq=a=>[...new Set(a)];
   const join=(a,b)=>a+b.toLowerCase();
-  const validPart=s=>/^[a-z]{2,14}$/i.test(s)&&!/(.)\1\1|[bcdfghjklmnpqrstvwxyz]{5}|[aeiou]{4}/i.test(s);
+  const validPart=s=>/^[a-z]{2,14}$/i.test(s)&&!/(.)\1\1|[bcdfghjklmnpqrstvwxz]{5}|[aeiou]{4}/i.test(s);
   const compounds=(a,b)=>uniq(a.flatMap(x=>b.filter(y=>!x.toLowerCase().includes(y.toLowerCase())&&!y.toLowerCase().includes(x.toLowerCase())).map(y=>join(x,y)))).filter(validPart);
   function validFull(name){
     const p=name.split(' ');
@@ -63,14 +63,14 @@
       if(cfg.style==='serious'){
         add(raceFirst,cfg.classTheme?themedLast:raceLast,1);
       }else if(cfg.style==='clever'){
-        const g=grammar.clever;
-        add(nouns,cfg.classTheme?uniq([...c.jobs,...g.jobs]):g.jobs,4);
-        add(g.descriptors,nouns,2);
-        add(nouns,g.endings,2);
-        add(g.first,cfg.classTheme?themedLast:raceLast,2);
-        add(cfg.classTheme?(data.CLASS_CLEVER[cfg.cls]||[]):r.puns,null,2);
-        // A class-specific word paired with a race-specific occupational surname.
-        if(cfg.classTheme)add(r.nouns,c.jobs,2);
+        const matching=grammar.clever.names.filter(entry=>
+          (!entry.adult||cfg.raunchy)&&
+          (!entry.races||entry.races.includes(cfg.race))&&
+          (!entry.classes||entry.classes.includes(cfg.cls))&&
+          (!cfg.classTheme||entry.classes?.includes(cfg.cls))
+        );
+        // Do not split phrases or fabricate fallback jokes to inflate the pool.
+        add(matching.map(entry=>entry.full),null,1);
       }else if(cfg.style==='silly'){
         const g=grammar.silly;
         add(g.titles,compounds(nouns,g.endings),4);
@@ -79,7 +79,7 @@
         add(raceFirst,compounds(nouns,g.endings),2);
         add(cfg.classTheme?(data.CLASS_SILLY[cfg.cls]||[]):[],null,1);
       }else throw new Error('Choose a supported naming style.');
-      if(cfg.raunchy&&cfg.style!=='serious'){
+      if(cfg.raunchy&&cfg.style==='silly'){
         const a=grammar.adult;
         add(a.adjectives,nouns,2);
         add(a.nouns,a.jobs,1);
