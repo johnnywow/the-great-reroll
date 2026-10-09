@@ -7,8 +7,10 @@ A random offset and coprime step visit each deck entry at most once per engine.
 Existing complete jokes in `data/names.js` remain intact alongside generated names.
 
 Serious combines pronounceable race-specific first names with race surnames, or
-race/class hybrid surnames when Class Themed is on. Clever mixes double-meaning
-phrases, occupational names and character-name constructions. Silly uses titles,
+race/class hybrid surnames when Class Themed is on. Clever selects complete, reviewed wordplay names with a documented reference or
+double meaning. It never combines random name halves, occupations, or surnames.
+Race and class eligibility tags filter this smaller catalog; Class Themed requires
+a class match. Adult mode also uses complete phrases rather than random templates. Silly uses titles,
 nicknames, adjectives and comic compounds. Race influences all three modes.
 Adult vocabulary is only eligible when that toggle is enabled in a humor mode.
 The first and last parts stay alphabetic, at most 14 letters each (29 total with
@@ -29,8 +31,9 @@ This is neither a global reservation service nor an in-game availability check.
 If storage is blocked or full, in-page protection continues and the UI reports
 that it will not survive a reload. Generation itself makes no network requests.
 
-Validation: `node --test tests/name-engine.test.cjs` covers 5,000 names per style,
+Validation: `node --test tests/name-engine.test.cjs` covers 5,000 names per Serious/Silly style,
 all supported race/class/style/toggle combinations, persisted history and reloads,
-legacy history, storage failures, exhaustion, per-batch variety, and the actual
-Name Forge UI/draft-wrapper integration. Run all tests with
+legacy history, storage failures, exhaustion, per-batch variety, the actual
+Name Forge UI/draft-wrapper integration, and exhaustive catalog eligibility and
+non-repetition checks for Clever, including after settings changes and exhaustion. Run all tests with
 `node --test tests/*.test.cjs`.
