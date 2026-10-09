@@ -1,0 +1,100 @@
+/* Name Forge: pronounceable race sounds and compositional naming grammars.
+   Existing hand-written jokes remain whole; generated names use these families. */
+(function(root){
+  const words=s=>s.split(' ');
+  const race=(starts,ends,roots,tails,nouns,adjectives,puns)=>({
+    starts:words(starts),ends:words(ends),roots:words(roots),tails:words(tails),
+    nouns:words(nouns),adjectives:words(adjectives),puns:puns.split('|')
+  });
+  root.GR_NAME_GRAMMAR={
+    races:{
+      Orc:race('Gr Kr Dr Br Th Rukk Vor Gor Drok Mogr Ragn Karg Zarg Ulg Borg Harg',
+        'ak ok uk ag og ar ash ork an ek ush om',
+        'Ash Black Blood Bone Brass Cinder Flint Gore Grim Iron Red Rock Scar Steel Stone War',
+        'tusk jaw fang fist scar hide howl maw cleaver breaker rend brand',
+        'Tusk Axe War Fury Blood Iron Battle Siege Honor Rage Skull Steel Brawl Bone Grudge Carnage',
+        'Grumpy Angry Rowdy Loud Reckless Furious Rusty Uninvited Stubborn Punchy',
+        'Wor Tusk|Axel Grind|Orson Welles|Brawl Saul|Hugh Mungus'),
+      Tauren:race('Tah Mah Tor Har Bal Koh Run Tal Sha Kel Hon Mor Tam Ban Nor Ahn',
+        'an en ar on ah im u ro ak al or um',
+        'Amber Autumn Cedar Cloud Dawn Dust Earth Flint High Long Mesa Moss Oak River Stone Thunder',
+        'horn hoof hide mane stride ridge meadow bough reed root walker song',
+        'Beef Horn Hoof Grass Prairie Hide Milk Cattle Meadow Thunder Herd Leather Pasture Steak Bison Hay',
+        'Sleepy Woolly Beefy Hungry Gentle Massive Grassy Fuzzy Stubborn Grazing',
+        'Med Rare|Dah Moo|Chuck Roast|Angus Beef|Hugh Heifer|Moo Point'),
+      Troll:race('Zan Zul Vol Jin Rok Kaz Mal Sen Jah Tal Zal Vek Dak Raz Zen Hak',
+        'ari jin aki oro ai ek ir az ala ani oshi uru',
+        'Blood Bone Dusk Fang Ghost Hex Jade Jungle Marsh Moon Reed Sand Shadow Spirit Thorn Venom',
+        'tusk fang spear grin hex mask stalker dancer drummer whisper charm omen',
+        'Hex Voodoo Tusk Jungle Mojo Venom Ritual Spirit Curse Idol Mask Totem Fang Shadow Omen Drum',
+        'Wicked Dizzy Crooked Sleepy Shady Jinxed Funky Twitchy Feral Haunted',
+        'Hex Appeal|Jin Tonic|Mojo Risin|Tusk Force|Voodoo Child'),
+      Undead:race('Mor Val Cor Sev Luc Cas Dor Mal Vor Sil Har Cal Ven Mar Al Bel',
+        'ian en us is an or in ar ic ion ius ren',
+        'Ash Black Bleak Bone Carrion Cold Crypt Dread Dusk Grave Hollow Mourne Pale Rot Tomb Wraith',
+        'bane bell croft dust fall gallows grave hush knell marrow requiem shroud wake ward',
+        'Grave Bone Crypt Death Dread Corpse Coffin Rot Tomb Funeral Plague Ghost Rigor Ash Doom Marrow',
+        'Late Rattling Dusty Moldy Deceased Restless Brittle Hollow Rotten Pale',
+        'Karma Geddon|Dia Baalic|Bona Geddon|Mort Ality|Barry Dalive|Noah Pulse|Will Decay|Ghoul Fish'),
+      Human:race('Ald Al Bel Cal Cas Ced Cor Dar Ed Gar Had Kel Le Mar Os Val',
+        'ric en an ian on er ic win ran den us or',
+        'Ash Black Bright Dawn Ever Fair Grey High Iron Kings North Oak Red Silver West White',
+        'brook crest dale field ford grove hall hart haven mere stone vale ward wick',
+        'Crown Coin Honor Banner Steel Castle Kingdom Valor Court Gold Oath Knight Sword Watch Glory Debt',
+        'Broke Tired Posh Tipsy Moody Vain Lost Smug Fancy Overdue',
+        'Cole Steel|Will Power|Justin Case|Hugh Mann|Reign Check'),
+      Dwarf:race('Bor Dor Thor Bran Gar Mor Kor Bal Dur Far Grun Har Nor Or Tor Vor',
+        'in im an ar un ik en ri ran din ak on',
+        'Amber Anvil Ash Brass Cinder Copper Deep Ember Flint Gold Granite Iron Keg Oak Silver Stone',
+        'beard brow forge grip hammer hearth helm keg mantle pick shield stone stout vein',
+        'Ale Beer Brew Keg Anvil Forge Hammer Ore Granite Beard Copper Iron Gold Mine Barrel Stone',
+        'Tipsy Stout Grumpy Sooty Stubborn Squat Drunken Loud Shaggy Stocky',
+        'Doug Deep|Cole Miner|Al Coholic|Barley Sober|Flint Eastwood'),
+      Gnome:race('Bin Fiz Gim Kip Nim Pip Quim Rin Tin Wim Zim Bel Fel Mer Tob Wil',
+        'ble bin bert wick lin ik per win den bo bit kin',
+        'Brass Bright Copper Fizz Gear Glass Gold Iron Quicksilver Rune Silver Spark Spring Steam Swift Tinker',
+        'bolt cog crank fuse gear gizmo lens lock loop pin pocket spark spindle sprocket wick wrench',
+        'Gear Bolt Spark Gadget Fuse Circuit Steam Clock Gizmo Spring Brass Battery Copper Rocket Widget Tinker',
+        'Tiny Wonky Twitchy Frazzled Wobbly Fizzy Squeaky Dizzy Bouncy Explosive',
+        'Gnome Alone|Short Circuit|Nick Nack|Chip Board|Justin Time'),
+      'Night Elf':race('Ael Aer Al Ar Cael El Fael Il Lae Lor Nae Sael Syl Thael Val Vel',
+        'ith ian as en ion is an ael or yn ar eth',
+        'Amber Ash Dawn Dusk Elder Fern Mist Moon Moss Night Silver Star Thorn Twilight Willow Winter',
+        'bloom bough dew fern glade grove leaf song shade thorn vale veil whisper wind',
+        'Moon Star Dusk Night Shadow Thorn Grove Leaf Owl Mist Dream Twilight Petal Fern Willow Bloom',
+        'Sleepy Dreamy Brooding Moody Ancient Leafy Mossy Dramatic Nocturnal Drowsy',
+        'Dusk Tilldawn|Sylvan Lining|Willow Power|Shade Thrower|Night Shift'),
+      Skyborne:race('Aer Ael Aur Cael Cor El Faer Ior Laer Or Saer Sor Vael Vel Ver Zeph',
+        'ian is on en iel or ar an ion ir eth us',
+        'Amber Azure Cloud Dawn Gale Gold High Mist Rain Silver Sky Star Storm Sun Swift Wind',
+        'crest drift feather flight gale plume sail song spire talon veil wake watch wing',
+        'Sky Cloud Wind Storm Feather Gale Flight Rain Wing Thunder Sun Breeze Horizon Lightning Talon Altitude',
+        'Flighty Breezy Dizzy Lofty Airy Fluffy Windy Drifting Gusty Scattered',
+        'Gale Force|Hugh Altitude|Cloud Nine|Wynn Gust|Air Apparent')
+    },
+    classes:{
+      Warrior:{nouns:words('Axe Blade Block Blood Brawl Charge Clash Cleave Combat Fury Hammer Iron Rage Shield Siege Steel Sword War Wound Wrath'),jobs:words('Collector Dealer Broker Enforcer Marshal Warden Captain Keeper Breaker Wrecker Auditor Foreman')},
+      Rogue:{nouns:words('Alibi Ambush Blade Dagger Dusk Escape Ghost Heist Knife Lock Night Poison Shadow Shiv Silence Stealth Theft Venom Vice Whisper'),jobs:words('Dealer Broker Collector Agent Witness Smuggler Inspector Courier Clerk Partner Planner Consultant')},
+      Hunter:{nouns:words('Arrow Beast Bow Buck Fang Hawk Hunt Mark Pack Paw Quiver Range Shot Snare Stag Talon Track Trail Trap Wolf'),jobs:words('Ranger Keeper Warden Spotter Scout Tracker Trapper Dealer Broker Caller Handler Collector')},
+      Shaman:{nouns:words('Ash Bolt Current Earth Echo Ember Flame Gale Lightning Rain Rock Spark Spirit Static Storm Thunder Tide Totem Water Wind'),jobs:words('Caller Speaker Conductor Director Keeper Broker Channeler Drummer Collector Warden Guide Consultant')},
+      Warlock:{nouns:words('Ash Blight Contract Curse Debt Demon Dread Fel Fire Hex Imp Inferno Omen Pact Ritual Shadow Soul Void Vice Doom'),jobs:words('Broker Dealer Collector Keeper Lawyer Notary Auditor Agent Witness Advocate Contractor Counsel')},
+      Mage:{nouns:words('Arcane Blink Blizzard Cinder Crystal Ember Fire Flame Frost Ice Inferno Mana Pyre Rune Scroll Snow Spark Spell Wand Winter'),jobs:words('Scholar Dealer Broker Weaver Warden Keeper Examiner Tutor Lecturer Critic Collector Consultant')},
+      Druid:{nouns:words('Bark Bear Bloom Branch Cat Claw Fang Fern Grove Leaf Moon Moss Oak Paw Root Seed Thorn Tree Vine Wild'),jobs:words('Keeper Warden Gardener Ranger Tender Watcher Caller Pruner Guide Inspector Manager Consultant')},
+      Priest:{nouns:words('Blessing Dawn Faith Grace Grave Halo Hymn Light Mercy Prayer Relic Rite Saint Sermon Shadow Soul Spirit Vigil Virtue Vow'),jobs:words('Keeper Reader Preacher Minister Confessor Witness Guide Chaplain Counselor Collector Auditor Consultant')},
+      Paladin:{nouns:words('Dawn Faith Glory Grace Hammer Halo Honor Justice Light Mercy Oath Radiance Reckoning Shield Silver Sun Valor Verdict Vigil Vow'),jobs:words('Keeper Warden Marshal Judge Bailiff Witness Advocate Arbiter Herald Captain Auditor Collector')}
+    },
+    clever:{
+      jobs:words('Accountant Advocate Agent Analyst Apprentice Architect Auditor Bailiff Banker Barrister Broker Clerk Collector Consultant Contractor Critic Curator Custodian Dealer Deputy Director Doctor Examiner Expert Foreman Historian Inspector Intern Investor Janitor Lawyer Librarian Manager Marshal Merchant Notary Officer Partner Patron Planner Porter Professor Registrar Scholar Steward Supervisor Surveyor Treasurer Tutor Vendor Warden Witness'),
+      descriptors:words('Quiet Hostile Casual Civil Mutual Public Private Legal Final Last Lost Silent Certain Sudden Bitter Cold Dark Open Secret Noble Royal Brief Grim Major Minor Mortal Chronic Grave Deadly Fatal'),
+      endings:words('Business Interest Intent Matter Affair Claim Return Notice Verdict Promise Bargain Omen Fortune Favor Trouble Reckoning Debt Duty Price Legacy Reason Grudge Demand Charge Warrant'),
+      first:words('Al Barry Blaine Brock Cole Dale Drew Earl Felix Finn Gil Hal Hugh Jack Jude Jules Kit Lance Lee Lou Max Miles Mort Ned Neil Nick Noel Otto Pat Perry Ray Reed Rex Rick Rob Roy Russ Saul Sid Stan Ted Tom Val Vic Wade Walt Will Wynn')
+    },
+    silly:{
+      titles:words('Captain Doctor Professor Mister Master Baron Count Duke Sir Lord Lady Major General Admiral Corporal Private Sergeant Marshal Chief Reverend Uncle Aunt Cousin Grandpa Grandma Papa Mama Junior Senior'),
+      endings:words('pants socks boots mittens noodle nugget biscuit muffin pudding waffle pickle goblin gremlin bucket pocket doodle belly bonnet button muncher sniffer sneezer wobbler bonker napper'),
+      adjectives:words('Awkward Baffled Bashful Bored Confused Cranky Crispy Delicate Disgruntled Dizzy Dramatic Drowsy Flustered Fragile Grumpy Hungry Itchy Jittery Lazy Limp Lumpy Nervous Nosy Oblivious Peculiar Petty Pompous Questionable Reluctant Salty Shabby Sleepy Slippery Soggy Spicy Squishy Sticky Suspicious Tardy Tipsy Unpaid Upset Wobbly Wonky'),
+      jobs:words('Intern Janitor Babysitter Therapist Dentist Accountant Landlord Plumber Mechanic Librarian Barista Baker Valet Butler Chauffeur Chaperone Caddie Comedian Critic Mascot Impostor Understudy Trainee Tourist Graduate Dropout Inspector Enthusiast Hoarder Whisperer Wrangler Collector Juggler Smuggler Sniffer Goblin Gremlin Menace Disaster Liability')
+    },
+    adult:{adjectives:words('Dirty Nasty Cheeky Randy Naughty Saucy Sweaty Thirsty'),nouns:words('Shaft Wood Package Rear Cheeks Booty'),jobs:words('Inspector Handler Polisher Wrangler Whisperer Collector')}
+  };
+})(typeof window!=='undefined'?window:globalThis);
