@@ -21,7 +21,7 @@
   function create({data,grammar,storage=null,legacyStorage=null,random=Math.random}={}){
     if(!data||!grammar)throw new Error('Name Forge vocabulary is missing.');
     let seen=new Set(),savedRaw=null,persistent=!!storage;
-    const cache=new Map();
+    const cache=new Map(),repeatCache=new Map(),lastBatches=new Map();
     function importNames(names){if(Array.isArray(names))for(const n of names)if(typeof n==='string'&&n.length<100)seen.add(normalize(n))}
     function sync(){
       if(!storage)return;
@@ -88,14 +88,14 @@
       return decks;
     }
     function configKey(cfg){return JSON.stringify([cfg.race,cfg.cls,cfg.style,!!cfg.classTheme,cfg.style!=='serious'&&!!cfg.raunchy])}
-    function next(decks){
+    function next(decks,blocked=seen){
       while(true){
         const available=decks.filter(d=>d.visited<d.size);
         if(!available.length)return null;
         let draw=random()*available.reduce((n,d)=>n+d.weight,0);
         const d=available.find(d=>(draw-=d.weight)<0)||available[available.length-1];
         const name=d.next();
-        if(validFull(name)&&!seen.has(normalize(name)))return name;
+        if(validFull(name)&&!blocked.has(normalize(name)))return name;
       }
     }
     function generate(cfg,count=3){
@@ -104,6 +104,22 @@
       const key=configKey(cfg);
       if(!cache.has(key))cache.set(key,build(cfg));
       const decks=cache.get(key),names=[];
+      let recycled=false;
+      function repeatName(){
+        recycled=true;
+        if(!repeatCache.has(key))repeatCache.set(key,{decks:build(cfg),used:new Set()});
+        const cycle=repeatCache.get(key),batch=names.map(n=>normalize(n.full)),previous=lastBatches.get(key)||[];
+        let full=next(cycle.decks,new Set([...cycle.used,...batch,...previous]));
+        // Start another shuffled cycle. Relax exclusions only for genuinely tiny pools.
+        for(const excluded of [[...batch,...previous],batch,[]]){
+          if(full)break;
+          cycle.decks=build(cfg);cycle.used.clear();
+          full=next(cycle.decks,new Set(excluded));
+        }
+        if(!full)throw new Error('No valid names exist for these settings.');
+        cycle.used.add(normalize(full));
+        return full;
+      }
       // Look ahead for variety within the batch; unshown candidates remain available.
       const deferred=[];
       while(names.length<count){
@@ -116,7 +132,7 @@
           full=candidate;break;
         }
         while(!full&&deferred.length){const candidate=deferred.shift();if(!seen.has(normalize(candidate)))full=candidate;}
-        if(!full)break;
+        if(!full)full=repeatName();
         seen.add(normalize(full));
         const [first,last]=full.split(' ');
         names.push({first,last,full,cfg:{...cfg}});
@@ -124,8 +140,9 @@
       for(let i=decks.length-1;i>=0;i--)if(decks[i].visited>=decks[i].size)decks.splice(i,1);
       const unused=uniq(deferred).filter(n=>!seen.has(normalize(n)));
       if(unused.length)decks.push(deck(unused,null,1));
+      lastBatches.set(key,names.map(n=>normalize(n.full)));
       persist();
-      return {names,exhausted:names.length<count,persistent,historySize:seen.size};
+      return {names,recycled,persistent,historySize:seen.size};
     }
     return {generate,historyKey:HISTORY_KEY};
   }

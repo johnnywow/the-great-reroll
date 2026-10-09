@@ -45,14 +45,14 @@ test('unavailable, malformed and full storage preserve in-page uniqueness',()=>{
   for(let i=0;i<30;i++){const r=e.generate(base,3);record(r,seen,3);assert.equal(r.persistent,false)}
  }
 });
-test('pool exhaustion returns fewer names rather than recycling',()=>{
+test('even a one-name pool keeps generating after exhaustion',()=>{
  const small=JSON.parse(JSON.stringify(grammar));
  small.races.Undead={...small.races.Undead,starts:['Vor'],ends:['an'],roots:['Ash'],tails:['wake']};
  const smallData=JSON.parse(JSON.stringify(data));smallData.RACE_FIRST.Undead=[];smallData.RACE_LAST.Undead=[];
  const e=E.create({data:smallData,grammar:small,random:()=>0});
  const result=e.generate({...base,classTheme:false},3);
- assert.deepEqual(result.names.map(n=>n.full),['Voran Ashwake']);assert.equal(result.exhausted,true);
- assert.equal(e.generate({...base,classTheme:false},3).names.length,0);
+ assert.deepEqual(result.names.map(n=>n.full),Array(3).fill('Voran Ashwake'));assert.equal(result.recycled,true);
+ assert.equal(e.generate({...base,classTheme:false},3).names.length,3);
 });
 test('race influences every style; class toggle affects every style; serious ignores adult toggle',()=>{
  for(const style of ['serious','clever','silly']){
@@ -86,35 +86,38 @@ test('actual Name Forge UI and draft wrapper share persisted history',()=>{
   for(const n of names){assert.ok(!seen.has(n));seen.add(n)}
   const draft=window.generateName({race:'Undead',cls:'Warrior'});assert.ok(!seen.has(draft));seen.add(draft);
  }
- assert.match(element('forgeGenerationStatus').textContent,/Three fresh names/);
+ assert.match(element('forgeGenerationStatus').textContent,/Keep forging/);
  assert.equal(JSON.parse(storage.getItem(E.HISTORY_KEY)).length,80);
  const index=fs.readFileSync(require.resolve('../index.html'),'utf8');
  assert.ok(index.indexOf('js/name-engine.js')<index.indexOf('js/app.js'));
  assert.match(index,/id="forgeGenerationStatus"/);
 });
 
- test('Clever only returns approved intact wordplay, including after exhaustion or adult toggles',()=>{
+ test('Clever continuously returns intact eligible names after exhausting every pool',()=>{
   const all=grammar.clever.names;
   for(const n of all){assert.ok(E.validFull(n.full),n.full);assert.ok(n.meaning.length>3,n.full)}
   for(const race of Object.keys(grammar.races))for(const cls of Object.keys(grammar.classes))for(const classTheme of [false,true])for(const raunchy of [false,true]){
    const e=engine(),cfg={race,cls,style:'clever',classTheme,raunchy},seen=new Set();
    const allowed=new Set(all.filter(n=>(!n.adult||raunchy)&&(!n.races||n.races.includes(race))&&(!n.classes||n.classes.includes(cls))&&(!classTheme||n.classes?.includes(cls))).map(n=>n.full));
-   let result;
-   do{
-    result=e.generate(cfg,3);
-    for(const n of result.names){assert.ok(allowed.has(n.full),n.full);assert.ok(!seen.has(n.full),n.full);seen.add(n.full)}
-   }while(!result.exhausted);
-   assert.deepEqual([...seen].sort(),[...allowed].sort());
-   assert.equal(e.generate(cfg,3).names.length,0);
+   let previous=[],recycled=false;
+   for(let i=0;i<Math.ceil(allowed.size/3)*3;i++){
+    const result=e.generate(cfg,3);assert.equal(result.names.length,3);
+    assert.equal(new Set(result.names.map(n=>n.full)).size,3);
+    for(const n of result.names){
+     assert.ok(allowed.has(n.full),n.full);
+     if(seen.has(n.full))assert.equal(seen.size,allowed.size,'Repeats before unseen names were used');
+     assert.ok(!previous.includes(n.full),'Immediate batch repeat');seen.add(n.full);
+    }
+    previous=result.names.map(n=>n.full);recycled ||= result.recycled;
+   }
+   assert.equal(recycled,true);assert.deepEqual([...seen].sort(),[...allowed].sort());
    assert.ok(!seen.has('Whisper Notary'));assert.ok(!seen.has('Saul Carrionwhisper'));
   }
  });
- test('Clever repeat protection holds across settings changes and reloads',()=>{
-  const storage=memory(),seen=new Set();
-  for(const classTheme of [true,false,true]){
-   const e=engine({storage});for(let i=0;i<30;i++){
-    const r=e.generate({...base,cls:'Rogue',style:'clever',classTheme},3);
-    for(const n of r.names){assert.ok(!seen.has(n.full));seen.add(n.full)}
-   }
-  }
+ test('Clever can recycle on reload without forgetting unexplored names in other settings',()=>{
+  const storage=memory();let e=engine({storage});
+  for(let i=0;i<40;i++)assert.equal(e.generate({...base,cls:'Rogue',style:'clever'},3).names.length,3);
+  e=engine({storage});assert.equal(e.generate({...base,cls:'Rogue',style:'clever'},3).names.length,3);
+  const first=e.generate(base,3).names.map(n=>n.full);
+  e=engine({storage});assert.ok(e.generate(base,3).names.every(n=>!first.includes(n.full)));
  });

@@ -21,8 +21,10 @@ Names shown are stored, case-insensitively, in localStorage under
 `war-table-name-history-v1`, with no 80-name rolling eviction. Current old-session
 history and previously saved favorites are imported when available. Each batch
 prefers different first names and surnames; deferred unseen candidates remain
-eligible. Exhaustion returns fewer results and a message, never recycled names
-or numeric suffixes.
+eligible. After unseen names are exhausted, generation continues from reshuffled eligible
+names. Repeat cycles avoid duplicates within a batch and the previous batch when
+the pool is large enough; tiny pools relax exclusions to keep generating. No
+numeric suffixes or arbitrary Clever filler are added.
 
 History is local to the browser and origin. Clearing browser data resets it;
 other browsers/visitors have independent histories. Sequential tabs merge saved
@@ -33,7 +35,7 @@ that it will not survive a reload. Generation itself makes no network requests.
 
 Validation: `node --test tests/name-engine.test.cjs` covers 5,000 names per Serious/Silly style,
 all supported race/class/style/toggle combinations, persisted history and reloads,
-legacy history, storage failures, exhaustion, per-batch variety, the actual
+legacy history, storage failures, continuous recycling, per-batch variety, the actual
 Name Forge UI/draft-wrapper integration, and exhaustive catalog eligibility and
-non-repetition checks for Clever, including after settings changes and exhaustion. Run all tests with
+unseen-first and continuous-output checks for Clever, including after settings changes and continuous recycling. Run all tests with
 `node --test tests/*.test.cjs`.
