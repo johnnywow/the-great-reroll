@@ -136,3 +136,73 @@
 .palette-card,.raid-card-main { user-select:none; -webkit-user-select:none; }
 .palette-card>*,.raid-card-main>* { pointer-events:none; }
 .raid-card-actions button[data-select-slot] { cursor:grab; user-select:none; }
+
+/* Explain the next move without pretending placeholders are actual people. */
+.raid-guidance { padding:22px; margin-bottom:22px; background:linear-gradient(120deg,#1d252c,#191e25); }
+.guidance-heading { display:flex; align-items:center; justify-content:space-between; gap:18px; margin-bottom:18px; }
+.guidance-heading h3 { font-size:21px; margin-top:5px; letter-spacing:-.3px; }
+.guidance-roles { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
+.guidance-role { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; column-gap:10px; row-gap:2px; padding:11px 15px; background:#141b23; border:1px solid #384250; text-align:left; }
+.guidance-role>span { flex:1; font-size:13px; }
+.guidance-role strong { font-size:22px; }
+.guidance-role strong small { font-size:13px; color:#9eacbe; font-weight:400; }
+.guidance-role>small { width:100%; color:#8fc9ac; font-size:11px; font-weight:400; }
+.guidance-role.has-gap>small { color:#cab185; }
+.guidance-role[aria-pressed=true] { border-color:#d4b477; background:#363022; }
+#raidGuidanceSummary { font-size:14px; color:#c1ccd8; margin:18px 0 12px; }
+.guidance-options { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; max-height:225px; overflow:auto; }
+.guidance-option { justify-content:flex-start; text-align:left; padding:12px; background:#202a35; border-color:#3c4b5b; gap:10px; }
+.guidance-option>img { width:34px; height:44px; object-fit:cover; border-radius:5px; flex-shrink:0; }
+.guidance-option>span:not(.preview-label) { min-width:0; flex:1; }
+.guidance-option strong { font-size:15px; display:block; color:var(--class); overflow-wrap:anywhere; }
+.guidance-option span>span { display:block; font-size:12px; font-weight:400; color:#c9d2df; overflow-wrap:anywhere; }
+.guidance-option small { display:block; margin-top:3px; font-size:11px; color:#9fadc0; font-weight:400; }
+.preview-label { font-size:12px; color:#e7c58b; flex-shrink:0; }
+.guidance-note { margin-top:13px; font-size:12px; color:#98a7ba; }
+.palette-card.is-option:not(.on-board) { border-color:#9d875d; background:#343023; }
+.raid-heading p,.palette-heading p,.palette-footer,.raid-canvas-heading p { font-size:13px; }
+.palette-heading h3 { font-size:16px; }
+.raid-workspace { grid-template-columns:265px minmax(0,1fr); }
+.palette-card { min-height:86px; }
+.palette-card strong { font-size:15px; }
+.palette-card small { font-size:12px; }
+.palette-card .palette-meta { font-size:11px; }
+.palette-card>img { width:38px; height:49px; }
+.palette-filter input,.palette-filter select,.palette-switch button { font-size:13px; min-height:40px; }
+.palette-footnote { font-size:12px; }
+.raid-card-main strong { font-size:14px; }
+.raid-card-main small { font-size:11px; }
+.raid-card-main>img { width:32px; height:45px; }
+.raid-spec { font-size:12px; }
+.raid-spec em { font-size:10px; }
+.raid-group-head h3,.raid-role-summary { font-size:13px; }
+.raid-group-head small,.raid-canvas-footer,.raid-totals>span { font-size:11px; }
+.raid-selection { font-size:13px; }
+.empty-raid-slot { font-size:13px; }
+.empty-raid-slot small { font-size:11px; }
+.plan-target-fieldset { border:1px solid #414d5c; padding:16px; border-radius:8px; margin:20px 0; }
+.plan-target-fieldset legend { padding:0 7px; font-size:14px; }
+.plan-target-fieldset .footnote { margin-top:12px; }
+.choice-identity { display:flex; gap:16px; align-items:center; margin-bottom:18px; }
+.choice-identity>img { width:58px; height:76px; object-fit:cover; border-radius:8px; border:1px solid #66604c; }
+.choice-identity strong { font-size:19px; }
+.choice-identity p { color:#aebccd; margin-top:5px; }
+.slot-impact { padding:15px; border:1px solid #59634f; border-radius:7px; background:#293327; margin:18px 0; color:#d3e3ca; font-size:14px; line-height:1.8; }
+.choice-tradeoff { color:#e0c493; margin-bottom:14px; }
+.board-focus .raid-guidance { margin-top:0; }
+@media(max-width:1300px) { .raid-groups { grid-template-columns:repeat(3,minmax(0,1fr)); } .guidance-options { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:1000px) { .raid-workspace { grid-template-columns:230px minmax(0,1fr); } .raid-groups { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:760px) { .raid-workspace { grid-template-columns:minmax(0,1fr); } .raid-guidance { padding:16px; } .guidance-heading { align-items:flex-start; } .guidance-heading h3 { font-size:18px; } .guidance-heading .text-button { font-size:12px; text-align:right; } .guidance-roles { grid-template-columns:repeat(2,minmax(0,1fr)); } .guidance-options { grid-template-columns:1fr; max-height:210px; } .guidance-role { padding:9px 11px; } .raid-card-main strong { font-size:15px; } .palette-card { padding:10px; } .palette-card strong { font-size:13px; } .palette-card small { font-size:11px; } .palette-card>img { width:30px; height:42px; } .raid-selection { font-size:12px; } }
+@media(max-width:500px) { .raid-groups { grid-template-columns:minmax(0,1fr); } .raid-toolbar button { font-size:12px; } }
+.raid-guidance { padding:16px 20px; }
+.guidance-heading { margin-bottom:12px; }
+.guidance-heading h3 { font-size:17px; margin:0; }
+.guidance-role { padding:7px 12px; }
+.guidance-role strong { font-size:19px; }
+.guidance-role:disabled { opacity:1; cursor:default; }
+.guidance-explore { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-top:12px; }
+.guidance-explore #raidGuidanceSummary { margin:0; font-size:13px; }
+.guidance-explore button { flex-shrink:0; }
+.guidance-options:not([hidden]) { margin-top:14px; }
+@media(max-width:760px) { .raid-guidance { padding:14px; } .guidance-explore { align-items:flex-start; } .guidance-explore #raidGuidanceSummary { font-size:12px; } }
+.choice-identity>div { min-width:0; overflow-wrap:anywhere; }
