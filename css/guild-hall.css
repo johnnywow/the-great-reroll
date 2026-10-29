@@ -329,3 +329,107 @@ dialog form>.full { margin-top: 17px; }
   .dialog-actions { flex-wrap: wrap; }
 }
 @media(prefers-reduced-motion:reduce) { * { scroll-behavior: auto !important; transition: none !important; } }
+
+/* People first: a readable guild workspace with linked character cards. */
+:root { --muted:#a5aeba; font-size:15px; }
+main { max-width:1600px; }
+button { min-height:40px; font-size:14px; }
+input,select,textarea { font-size:15px; min-height:42px; }
+label { font-size:13px; }
+.text-button { font-size:13px; }
+h2 { font-size:20px; }
+.page-heading { padding:30px 0 24px; }
+.guild-mark { width:58px; height:58px; border-radius:13px; background:linear-gradient(135deg,#3a3020,#1c1e22); font-size:32px; box-shadow:inset 0 0 0 5px #ffffff03; }
+.guild-identity .muted,.save-state,.tools summary,.workspace-tabs button { font-size:14px; }
+.workspace-tabs { margin-bottom:24px; }
+.eyebrow { display:block; color:var(--gold); font-size:11px; letter-spacing:.14em; font-weight:700; }
+.raid-spotlight { display:flex; justify-content:space-between; gap:24px; align-items:center; padding:25px 30px; margin-bottom:25px; border:1px solid #665131; border-radius:12px; background:radial-gradient(ellipse at 90% 20%,#b4893820,transparent 65%),linear-gradient(110deg,#26251f,#191e25); }
+.spotlight-copy { min-width:0; }
+.spotlight-copy h2 { margin:7px 0; font-size:28px; letter-spacing:-.6px; overflow-wrap:anywhere; }
+.spotlight-copy>p { font-size:14px; color:#c4c9d0; }
+.spotlight-copy .spotlight-roles { margin-top:10px; color:#b6ab96; font-size:13px; }
+.spotlight-action { flex-shrink:0; text-align:right; }
+.spotlight-action>strong { display:block; font-size:30px; font-weight:650; line-height:1.2; }
+.spotlight-action>span { display:block; color:#b0b5bd; font-size:12px; margin:3px 0 12px; }
+.spotlight-action button { padding:9px 17px; }
+.roster-layout { grid-template-columns:minmax(0,1fr) 270px; }
+.roster-panel { background:transparent; border:0; overflow:visible; }
+.roster-panel>.section-head { padding:0 0 18px; }
+.section-head .muted { font-size:14px; }
+.roster-filters { padding:0 0 20px; }
+.roster-filters label input,.roster-filters label select { min-height:40px; font-size:14px; }
+.roster-filters>span { font-size:12px; }
+.player-cards { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+.player-card { min-width:0; border:1px solid #343b44; border-radius:12px; background:#191e25; overflow:hidden; }
+.player-card:only-child { grid-column:1 / -1; }
+.player-card-head { display:flex; gap:14px; align-items:center; padding:20px; background:linear-gradient(115deg,#252b34,#1c222a); border-bottom:1px solid #343c47; }
+.player-portrait { width:62px; height:72px; border-radius:9px; overflow:hidden; flex-shrink:0; border:1px solid var(--class); background:#2c3440; display:flex; align-items:center; justify-content:center; color:var(--gold); font-size:28px; }
+.player-portrait img { width:100%; height:100%; object-fit:cover; }
+.player-identity { min-width:0; flex:1; }
+.player-identity .eyebrow { font-size:9px; color:#a8b1bf; }
+.player-name { display:block; font-size:21px; font-weight:650; letter-spacing:-.35px; border:1px solid transparent; background:transparent; padding:0 3px; min-height:34px; margin-left:-3px; }
+.player-name:hover { border-color:#4b5563; }
+.player-name:focus { background:#161c23; }
+.player-character-count { color:#a9b3c1; font-size:12px; }
+.add-alt { min-height:34px; padding:5px 10px; font-size:12px; flex-shrink:0; }
+.player-characters { padding:14px; display:grid; gap:12px; }
+.player-card:only-child .player-characters { grid-template-columns:repeat(auto-fit,minmax(290px,1fr)); }
+.character-card { min-width:0; background:#141920; padding:16px; border:1px solid #2f3844; border-left:3px solid var(--class); border-radius:8px; }
+.character-card.bench { border-left-style:dashed; }
+.character-identity { display:flex; gap:11px; align-items:center; margin-bottom:17px; }
+.character-identity>img,.character-unknown { width:38px; height:38px; border-radius:7px; border:1px solid #4a505b; flex-shrink:0; }
+.character-unknown { display:grid; place-items:center; color:var(--gold); }
+.character-identity>div { min-width:0; flex:1; }
+.character-type { font-size:9px; letter-spacing:.1em; color:var(--class); display:block; }
+.character-identity input { background:transparent; border:1px solid transparent; font-size:16px; font-weight:600; min-height:29px; padding:1px 3px; margin-left:-3px; }
+.character-identity input:hover { border-color:#455161; }
+.character-fields { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+.character-fields label { font-size:12px; color:#a9b3c2; }
+.character-fields select { background:#1e252f; border-color:#374251; padding:7px; font-size:14px; min-height:40px; }
+.character-bottom { display:flex; align-items:center; gap:10px; margin-top:15px; }
+.character-status { width:90px; flex-shrink:0; }
+.character-status select { margin:0; min-height:32px; font-size:12px; padding:4px 7px; background:#20352c; border-color:#395246; color:#b4dfc8; }
+.bench .character-status select { background:#302e29; border-color:#4e493b; color:#d7c6a7; }
+.backup-note { color:#98a5b7; font-size:11px; flex:1; }
+.character-bottom .options-toggle { font-size:13px; padding:5px; min-height:34px; color:#d8c29d; }
+.character-details { margin-top:16px; border-top:1px solid #343e4d; padding-top:16px; }
+.character-details h3 { font-size:14px; margin-bottom:10px; }
+.character-details>label { margin-top:16px; }
+.character-detail-actions { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:18px; }
+.character-detail-actions button { font-size:12px; }
+.roster-footer { padding:16px 0; font-size:12px; }
+.aside-heading h2 { font-size:16px; }
+.role-top,.role-top strong { font-size:14px; }
+.role-card small,.role-top .target,.total-card p,.next-step p,.next-step .text-button,.overview>.full { font-size:12px; }
+.total-card div>span { font-size:12px; }
+.footnote,.coverage-guide,.class-head small,.spec-people { font-size:13px; }
+.spec-line,.class-head strong { font-size:14px; }
+.class-head>span { font-size:12px; }
+footer { font-size:12px; }
+@media(max-width:1250px) { .player-cards { grid-template-columns:1fr; } .player-card:only-child .player-characters { grid-template-columns:1fr; } }
+@media(max-width:960px) { .roster-layout { grid-template-columns:1fr; } .player-cards { grid-template-columns:repeat(2,minmax(0,1fr)); } .character-fields { grid-template-columns:1fr 1fr; } .character-fields>label:last-child { grid-column:1 / -1; } .player-card-head { padding:16px; gap:10px; } .player-portrait { width:48px; height:60px; } }
+@media(max-width:680px) {
+  .player-cards { grid-template-columns:1fr; }
+  .raid-spotlight { padding:20px; display:block; }
+  .spotlight-action { display:flex; text-align:left; align-items:center; gap:10px; flex-wrap:wrap; margin-top:18px; }
+  .spotlight-action>strong { font-size:24px; }
+  .spotlight-action>span { margin:0; }
+  .spotlight-action>button { width:100%; margin-top:5px; }
+  .spotlight-copy h2 { font-size:24px; }
+  .player-card-head { padding:16px; }
+  .player-characters { padding:10px; }
+  .player-card:only-child .player-characters { grid-template-columns:minmax(0,1fr); }
+  .character-card { padding:14px; }
+  .player-name { font-size:20px; }
+  .guild-identity .muted,.save-state,.tools summary { font-size:12px; }
+  .workspace-tabs { gap:22px; }
+  .workspace-tabs button { font-size:14px; }
+  .roster-filters label select { font-size:12px; width:110px; }
+  .roster-filters label input { font-size:13px; }
+  .roster-panel .section-head { align-items:center; }
+  .roster-panel .section-head h2 { font-size:18px; }
+  .actions button { min-height:38px; font-size:12px; }
+  .roster-footer .local-note { display:none; }
+}
+
+.player-cards { align-items:start; }
