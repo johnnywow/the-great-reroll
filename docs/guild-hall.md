@@ -1,6 +1,6 @@
 # Guild Hall roster planner
 
-Open `guild-hall.html`, or choose Guild Hall from the War Table homepage. The previous two-stage roster draft remains available from the new page's Roster draft link (`index.html?guild-draft=1`).
+Open `/guild-hall/`, or choose Guild Hall from the War Table homepage. The page source lives in `guild-hall/index.html`; the former `/guild-hall.html` URL forwards to the clean address, preserving query strings and fragments. A relative base URL keeps shared scripts, styles, images, and home links working from the nested route. Browser storage remains on the same origin and key, preserving rosters and raid plans. The previous two-stage roster draft remains available from the Roster draft link (`/?guild-draft=1`).
 
 ## Planning model
 

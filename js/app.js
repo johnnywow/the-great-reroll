@@ -1321,7 +1321,7 @@ setTimeout(grRemoveDuplicateClassText,0);
   }
 
   byId('grHomeLottery').onclick=()=>enterDraftTool('lottery');
-  byId('grHomeRoster').onclick=()=>{window.location.href='guild-hall.html';};
+  byId('grHomeRoster').onclick=()=>{window.location.href='guild-hall/';};
   byId('grHomeForge').onclick=enterForge;
   byId('grHomeButton').onclick=goHome;
 
