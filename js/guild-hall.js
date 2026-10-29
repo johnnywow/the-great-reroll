@@ -4,6 +4,7 @@
   const D = window.GR_CHARACTER_DATA;
   const E = window.GuildRosterEngine.create(D);
   const roles = window.GuildRosterEngine.ROLES;
+  const classColor = cls => ({Shaman:'#79b2ff',Warlock:'#b5a5e5',Warrior:'#d1b08a',Druid:'#ff9a58'}[cls] || D.GREAT_REROLL_CLASS_COLORS[cls] || '#b5a283');
   const KEY = 'war-table-guild-roster-v1';
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const option = (value, label, selected) => `<option value="${esc(value)}" ${selected===value?'selected':''}>${esc(label)}</option>`;
@@ -16,48 +17,87 @@
   function toast(message) {clearTimeout(toastTimer);$('toast').textContent=message;$('toast').hidden=false;toastTimer=setTimeout(()=>$('toast').hidden=true,5500);}
   function save() {
     if(storageBlocked) {$('saveStatus').textContent='Not saving — reload or start a new roster';return;}
-    try {localStorage.setItem(KEY,JSON.stringify(state));$('saveStatus').textContent='Saved on this browser';}
+    try {localStorage.setItem(KEY,JSON.stringify(state));$('saveStatus').textContent='Saved in this browser';}
     catch(e) {$('saveStatus').textContent='Could not save — export a backup';toast('Your changes are in this tab only. Export a backup to keep them.');}
   }
   function commit() {suggestion=null;save();render();}
   const names = list => list.length ? list.map(m=>esc(m.name)).join(', ') : 'None yet';
+  function setView(view, focus = false) {
+    const selected = ['roster','composition','coverage'].includes(view) ? view : 'roster';
+    if(selected==='roster')renderRoster();
+    if(selected==='coverage')renderCoverage();
+    document.querySelectorAll('[data-view]').forEach(tab => {
+      const active=tab.dataset.view===selected;
+      tab.setAttribute('aria-selected',String(active));
+      tab.tabIndex=active?0:-1;
+      $(tab.getAttribute('aria-controls')).hidden=!active;
+      if(active&&focus)tab.focus();
+    });
+  }
+  function renderChrome() {
+    $('guildTitle').textContent=state.name;
+    $('guildSubtitle').textContent=state.faction+' · Guild roster planner';
+    const empty=!state.members.length;
+    $('rosterOverview').hidden=empty;
+    document.querySelector('.roster-layout').classList.toggle('is-empty',empty);
+    $('rosterFilters').hidden=empty;
+    $('rosterFooter').hidden=empty;
+    $('rosterHint').textContent=empty?'Your people, their characters, and where they fit.':'Edit assignments directly. Open Details for backups and notes.';
+  }
   function renderRoles() {
     const active=state.members.filter(m=>m.status==='active');
     const total=Object.values(state.targets).reduce((a,b)=>a+b,0);
-    $('activeCount').textContent=active.length;$('targetCount').textContent=`/ ${total} target`;
-    $('rosterMeta').textContent=`${state.members.length-active.length} bench · ${active.filter(m=>!m.main).length} need a spec`;
-    const symbols={Tank:'◈',Healer:'✦',Melee:'⚔',Ranged:'◎'};
+    const undecided=active.filter(m=>!m.main).length;
+    $('activeCount').textContent=active.length;
+    $('targetCount').textContent=`/ ${total} active target`;
+    $('targetTotal').textContent=`${total} spots`;
+    $('rosterMeta').textContent=`${state.members.length-active.length} bench · ${undecided} undecided`;
+    const colors={Tank:'#7ea9df',Healer:'#8bc5a5',Melee:'#dbac75',Ranged:'#b39bd9'};
     $('roleCards').innerHTML=roles.map(role=>{
       const assigned=active.filter(m=>E.roleFor(m)===role).length;
       const backup=active.filter(m=>E.roleFor(m)!==role && m.backups.some(s=>E.roleFor(m,s)===role)).length;
       const target=state.targets[role];
-      return `<div class="role-card panel"><div class="role-top"><span>${role==='Melee'?'Melee DPS':role==='Ranged'?'Ranged DPS':role+'s'}</span><span class="role-icon" aria-hidden="true">${symbols[role]}</span></div><div><strong>${assigned}</strong><span class="target">/ ${target} target</span></div><div class="meter"><i style="width:${target?Math.min(100,assigned/target*100):0}%"></i></div><small>${backup} backup${backup===1?'':'s'} · ${Math.max(0,target-assigned)} open</small></div>`;
+      return `<div class="role-card" style="--role:${colors[role]}"><div class="role-top"><span class="role-label"><i class="role-dot" aria-hidden="true"></i>${role==='Melee'||role==='Ranged'?role+' DPS':role+'s'}</span><span><strong>${assigned}</strong><span class="target"> / ${target}</span></span></div><div class="meter"><i style="width:${target?Math.min(100,assigned/target*100):0}%"></i></div><small>${Math.max(0,target-assigned)} open${backup?` · ${backup} backup${backup===1?'':'s'}`:''}</small></div>`;
     }).join('');
     $('targetInputs').innerHTML=roles.map(role=>`<label>${role==='Melee'||role==='Ranged'?role+' DPS':role+'s'}<input type="number" min="0" max="100" step="1" data-target="${role}" value="${state.targets[role]}" aria-label="${role} target"></label>`).join('');
     const plan=E.suggest(state,$('scenarioMode').value);
     const missing=plan.missing.filter(r=>r.count);
-    $('planningInsight').innerHTML=`<strong>${plan.assignments.length} of ${total} spots can be filled</strong><p>${missing.length?'Still need '+missing.map(r=>`${r.count} ${r.role.toLowerCase()}`).join(' · ')+'.':'Your current options can cover every target.'}</p><p>One member per spot. Undecided specs are possibilities to confirm with players.</p>`;
+    $('planningInsight').innerHTML=active.length?`<strong>${plan.assignments.length} of ${total} spots can be filled</strong><p>${missing.length?'Open roles: '+missing.map(r=>`${r.count} ${r.role.toLowerCase()}`).join(' · '):'Your current options cover every target.'}</p>`:'<strong>Your lineup starts with your roster</strong><p>Add members and choose their classes to explore a composition.</p><button class="text-button" data-go-view="roster">Go to roster →</button>';
+    $('rosterNextStep').innerHTML=!active.length?'<p>Mark members Active to include them in your composition.</p>':undecided?`<p>${undecided} active member${undecided===1?' still needs':'s still need'} a primary spec.</p><button class="text-button" data-filter-undecided>Review undecided members →</button>`:`<p>All active members have a primary spec.</p><button class="text-button" data-go-view="composition">Explore a lineup →</button>`;
     $('suggestLineup').disabled=!active.some(m=>m.cls)||!total;
   }
   function renderRoster() {
     const term=$('search').value.toLowerCase().trim(), filter=$('statusFilter').value;
-    const visible=state.members.filter(m=>(filter==='all'||filter===m.status||(filter==='undecided'&&!m.main)) && `${m.name} ${m.cls} ${m.race} ${m.main}`.toLowerCase().includes(term));
-    $('memberCount').textContent=state.members.length;$('visibleCount').textContent=`${visible.length} shown`;
-    $('addMember').disabled=state.members.length>=100;$('bulkAdd').disabled=state.members.length>=100;
+    const visible=state.members.filter(m=>(filter==='all'||filter===m.status||(filter==='undecided'&&!m.main&&m.status==='active')) && `${m.name} ${m.cls} ${m.race} ${m.main}`.toLowerCase().includes(term));
+    $('memberCount').textContent=state.members.length;
+    $('visibleCount').textContent=`${visible.length} member${visible.length===1?'':'s'}`;
+    $('addMember').disabled=state.members.length>=100;
+    $('bulkAdd').disabled=state.members.length>=100;
     if(!visible.length) {
-      $('rosterBody').innerHTML=state.members.length?'<div class="empty"><h3>No matching members</h3><p>Try another search or status filter.</p><button data-action="clear-filters">Clear filters</button></div>':'<div class="empty"><div class="empty-symbol" aria-hidden="true">⚔</div><h3>A guild starts with its people.</h3><p>Add your members, give them a class and race, and watch your possible composition take shape.</p><div class="actions"><button class="primary" data-action="add">+ Add first member</button><button class="secondary" data-action="example">Try an example</button></div></div>';
+      $('rosterBody').innerHTML=state.members.length
+        ? '<div class="empty"><h3>No members found</h3><p>Try a different name or change your filter.</p><button data-action="clear-filters" class="secondary">Clear filters</button></div>'
+        : `<div class="empty"><div class="empty-art" aria-hidden="true"><span><img src="${D.GREAT_REROLL_CLASS_ICONS.Warrior}" alt=""></span><span><img src="${D.GREAT_REROLL_CLASS_ICONS.Priest}" alt=""></span><span><img src="${D.GREAT_REROLL_CLASS_ICONS.Mage}" alt=""></span></div><h3>Bring your guild together.</h3><p>Add your members to start planning. You can choose their classes, races, and specs as you go.</p><div class="actions"><button class="primary" data-action="add">+ Add first member</button><button class="secondary" data-action="paste">Paste a list</button></div><button class="text-button example-link" data-action="example">Just exploring? Try an example roster →</button></div><div class="onboarding-steps"><div class="onboarding-step"><span>1</span><div><strong>Add your people</strong><p>One at a time or all at once.</p></div></div><div class="onboarding-step"><span>2</span><div><strong>Assign characters</strong><p>Choose classes, races, and specs.</p></div></div><div class="onboarding-step"><span>3</span><div><strong>Find your composition</strong><p>See coverage and open roles.</p></div></div></div>`;
       return;
     }
-    $('rosterBody').innerHTML=visible.map(m=>{
-      const color=D.GREAT_REROLL_CLASS_COLORS[m.cls]||'#b99d71';
+    const rows=visible.map(m=>{
+      const color=classColor(m.cls);
       const art=D.HERO_ART[`${state.faction}|${m.race}|${m.cls}`]||D.GREAT_REROLL_CLASS_ICONS[m.cls];
-      return `<article class="member-row ${m.status==='bench'?'bench':''}" data-member="${esc(m.id)}" style="--class:${color}"><div class="member-grid">${art?`<img class="member-art" src="${art}" alt="" loading="lazy">`:`<span class="member-art member-initial" aria-hidden="true">${esc(m.name.charAt(0))}</span>`}<label class="name-field">MEMBER${m.status==='bench'?' · BENCH':''}<input data-field="name" value="${esc(m.name)}" maxlength="80" aria-label="Member name for ${esc(m.name)}"></label><label class="class-field">CLASS<select data-field="cls" aria-label="Class for ${esc(m.name)}">${selectOptions(E.availableClasses(state.faction),m.cls,'Undecided')}</select></label><label class="race-field">RACE<select data-field="race" aria-label="Race for ${esc(m.name)}">${selectOptions(E.races(state.faction,m.cls),m.race,'Undecided')}</select></label><label class="spec-field">PRIMARY SPEC<select data-field="main" aria-label="Primary spec for ${esc(m.name)}" ${!m.cls?'disabled':''}>${selectOptions(E.specs(m.cls).map(s=>s.name),m.main,'Undecided')}</select></label><button class="options-toggle" data-action="expand" aria-expanded="${expanded.has(m.id)}" aria-controls="options-${esc(m.id)}" aria-label="Options for ${esc(m.name)}">${expanded.has(m.id)?'−':'+'}</button></div><div class="member-more" id="options-${esc(m.id)}" ${expanded.has(m.id)?'':'hidden'}><div class="member-options-head"><label>ROSTER STATUS<select data-field="status" aria-label="Status for ${esc(m.name)}">${option('active','Active roster',m.status)}${option('bench','Bench',m.status)}</select></label><button class="delete" data-action="delete">Remove member</button></div><p class="eyebrow">BACKUP SPECS</p><div class="backup-options">${E.specs(m.cls).filter(s=>s.name!==m.main).map(s=>`<label class="checkbox"><input type="checkbox" data-backup="${esc(s.name)}" ${m.backups.includes(s.name)?'checked':''}>${esc(s.name)}</label>`).join('')||'<span class="footnote">Choose a class to see spec options.</span>'}</div><label>NOTES<textarea data-field="notes" rows="2" maxlength="500" placeholder="Preferences, availability, or recruitment notes" aria-label="Notes for ${esc(m.name)}">${esc(m.notes)}</textarea></label></div></article>`;
+      const open=expanded.has(m.id);
+      return `<tr class="member-row ${m.status==='bench'?'bench':''} ${open?'is-expanded':''}" data-member="${esc(m.id)}" style="--class:${color}"><td><div class="member-cell">${art?`<img class="member-art" src="${art}" alt="" loading="lazy">`:`<span class="member-art member-initial" aria-hidden="true">${esc(m.name.charAt(0))}</span>`}<div><input data-field="name" value="${esc(m.name)}" maxlength="80" aria-label="Member name for ${esc(m.name)}"></div></div></td><td><label><span class="mobile-label">Class</span><select data-field="cls" aria-label="Class for ${esc(m.name)}">${selectOptions(E.availableClasses(state.faction),m.cls,'Choose class')}</select></label></td><td><label><span class="mobile-label">Race</span><select data-field="race" class="${m.race?'':'undecided'}" aria-label="Race for ${esc(m.name)}">${selectOptions(E.races(state.faction,m.cls),m.race,'Undecided')}</select></label></td><td><label><span class="mobile-label">Primary spec</span><select data-field="main" class="${m.main?'':'undecided'}" aria-label="Primary spec for ${esc(m.name)}" ${!m.cls?'disabled':''}>${selectOptions(E.specs(m.cls).map(s=>s.name),m.main,m.cls?'Undecided':'Choose a class')}</select></label>${m.backups.length?`<button class="spec-backups" data-action="expand" aria-label="Backup specs for ${esc(m.name)}">+ ${m.backups.length} backup${m.backups.length===1?'':'s'}</button>`:''}</td><td><label><span class="mobile-label">Status</span><select class="status-select" data-field="status" aria-label="Status for ${esc(m.name)}">${option('active','Active',m.status)}${option('bench','Bench',m.status)}</select></label></td><td><button class="options-toggle" data-action="expand" aria-expanded="${open}" aria-controls="options-${esc(m.id)}" aria-label="Details for ${esc(m.name)}">${open?'Close':'Details'}</button></td></tr><tr class="member-details" data-member="${esc(m.id)}" id="options-${esc(m.id)}" ${open?'':'hidden'}><td colspan="6"><div class="member-more"><div class="member-options-head"><h3>Backup specs</h3><button class="delete" data-action="delete">Remove member</button></div><div class="backup-options">${E.specs(m.cls).filter(s=>s.name!==m.main).map(s=>`<label class="checkbox"><input type="checkbox" data-backup="${esc(s.name)}" ${m.backups.includes(s.name)?'checked':''}>${esc(s.name)}</label>`).join('')||'<span class="footnote">Choose a class to see spec options.</span>'}</div><label>Notes<textarea data-field="notes" rows="2" maxlength="500" placeholder="Preferences, availability, or anything worth knowing" aria-label="Notes for ${esc(m.name)}">${esc(m.notes)}</textarea></label></div></td></tr>`;
     }).join('');
+    $('rosterBody').innerHTML=`<table class="roster-table"><caption class="sr-only">Guild members and character assignments</caption><thead><tr><th scope="col">Member</th><th scope="col">Class</th><th scope="col">Race</th><th scope="col">Primary spec</th><th scope="col">Status</th><th scope="col"><span class="sr-only">Member details</span></th></tr></thead><tbody>${rows}</tbody></table>`;
   }
   function renderCoverage() {
-    $('coverageGrid').innerHTML=E.coverage(state).filter(c=>$('showEmpty').checked||c.members.length).map(c=>`<article class="class-card ${!c.members.length?'missing':''}" style="--class:${D.GREAT_REROLL_CLASS_COLORS[c.cls]}"><div class="class-head"><img src="${D.GREAT_REROLL_CLASS_ICONS[c.cls]}" alt=""><div><strong>${c.cls}</strong><small>${c.members.length?`${c.members.length} active member${c.members.length===1?'':'s'}`:'Recruitment opportunity'}</small></div><span>${c.members.length}</span></div><div class="coverage-labels"><span>Specialization</span><span>Assigned</span><span>Backup</span><span>Possible</span></div>${c.specs.map(s=>`<details class="spec-row"><summary class="spec-line" aria-label="${c.cls} ${s.name}: ${s.assigned.length} assigned, ${s.backup.length} backup, ${s.possible.length} possible"><span>${esc(s.name)}</span>${['assigned','backup','possible'].map(k=>`<span class="${s[k].length?'nonzero':'zero'}">${s[k].length}</span>`).join('')}</summary><div class="spec-people"><div><strong>Assigned:</strong> ${names(s.assigned)}</div><div><strong>Backup:</strong> ${names(s.backup)}</div><div><strong>Class possibilities:</strong> ${names(s.possible)}</div></div></details>`).join('')}</article>`).join('')||'<p class="muted">Assign a class to a member to see their spec options.</p>';
+    $('coverageGrid').innerHTML=E.coverage(state).filter(c=>$('showEmpty').checked||c.members.length).map(c=>`<article class="class-card ${!c.members.length?'missing':''}" style="--class:${classColor(c.cls)}"><div class="class-head"><img src="${D.GREAT_REROLL_CLASS_ICONS[c.cls]}" alt=""><div><strong>${c.cls}</strong><small>${c.members.length?'Active roster':'No active members'}</small></div><span>${c.members.length} member${c.members.length===1?'':'s'}</span></div><div class="coverage-labels"><span>Spec</span><span>Assigned</span><span>Backup</span><span>Possible</span></div>${c.specs.map(s=>`<details class="spec-row"><summary class="spec-line" aria-label="${c.cls} ${s.name}: ${s.assigned.length} assigned, ${s.backup.length} backup, ${s.possible.length} possible"><span>${esc(s.name)}</span>${['assigned','backup','possible'].map(k=>`<span class="${s[k].length?'nonzero':'zero'}">${s[k].length||'—'}</span>`).join('')}</summary><div class="spec-people"><div><strong>Assigned:</strong> ${names(s.assigned)}</div><div><strong>Backup:</strong> ${names(s.backup)}</div><div><strong>Class possibilities:</strong> ${names(s.possible)}</div></div></details>`).join('')}</article>`).join('')||'<div class="empty"><h3>Your spec options will appear here.</h3><p>Add active members and choose their classes to see what your guild could cover.</p><button class="secondary" data-go-view="roster">Go to roster →</button></div>';
   }
-  function render() {$('guildName').value=state.name;$('faction').value=state.faction;renderRoles();renderRoster();renderCoverage();}
+  function render() {
+    $('guildName').value=state.name;
+    $('faction').value=state.faction;
+    renderChrome();
+    renderRoles();
+    renderRoster();
+    renderCoverage();
+  }
   function syncAdd() {
     const cls=$('newClass').value;
     const race=$('newRace').value, spec=$('newSpec').value;
@@ -102,27 +142,53 @@
   });
   $('search').addEventListener('input',renderRoster);$('statusFilter').addEventListener('change',renderRoster);$('showEmpty').addEventListener('change',renderCoverage);
   $('scenarioMode').addEventListener('change',()=>{$('scenarioHelp').textContent=$('scenarioMode').value==='potential'?'Explores every spec each class could play. Confirm changes with your members.':'Members without a primary spec can fill any spec their class offers.';renderRoles();});
-  $('addMember').addEventListener('click',openAdd);$('bulkAdd').addEventListener('click',()=>{$('bulkForm').reset();$('bulkDialog').showModal();$('bulkNames').focus();});$('newClass').addEventListener('change',()=>{$('newSpec').value='';syncAdd();});
+  function openBulk() {$('bulkForm').reset();$('bulkDialog').showModal();$('bulkNames').focus();}
+  $('addMember').addEventListener('click',openAdd);$('bulkAdd').addEventListener('click',openBulk);$('newClass').addEventListener('change',()=>{$('newSpec').value='';syncAdd();});
   $('memberForm').addEventListener('submit',event=>{event.preventDefault();const name=$('newName').value.trim();if(!name){$('newName').focus();return;}if(state.members.length>=100){toast('The roster limit is 100 members.');return;}
     state.members.push(newMember({name,cls:$('newClass').value,race:$('newRace').value,main:$('newSpec').value,status:$('newStatus').value}));$('memberDialog').close();commit();toast(`${name} added to the roster.`);
   });
   $('bulkForm').addEventListener('submit',event=>{event.preventDefault();const list=$('bulkNames').value.split(/\r?\n/).map(n=>n.trim()).filter(Boolean);if(!list.length)return;if(state.members.length+list.length>100){toast(`You can add ${100-state.members.length} more members.`);return;}
     list.forEach(name=>state.members.push(newMember({name})));$('bulkDialog').close();commit();toast(`${list.length} members added.`);
   });
+  $('rosterBody').addEventListener('input',event=>{
+    const field=event.target.dataset.field;
+    if(field!=='name'&&field!=='notes')return;
+    const id=event.target.closest('[data-member]')?.dataset.member;
+    const member=state.members.find(m=>m.id===id);
+    if(!member)return;
+    member[field]=field==='name'?(event.target.value.trim()||'Unnamed member'):event.target.value;
+    suggestion=null;
+    save();
+  });
   $('rosterBody').addEventListener('change',event=>{
     const row=event.target.closest('[data-member]');if(!row)return;const m=state.members.find(m=>m.id===row.dataset.member);if(!m)return;
     const field=event.target.dataset.field,backup=event.target.dataset.backup;
     if(backup){m.backups=event.target.checked?[...new Set([...m.backups,backup])]:m.backups.filter(s=>s!==backup);}
     else if(field){m[field]=event.target.value;if(field==='cls'){if(!E.races(state.faction,m.cls).includes(m.race))m.race='';m.main='';m.backups=[];}if(field==='main')m.backups=m.backups.filter(s=>s!==m.main);if(field==='name')m.name=m.name.trim()||'Unnamed member';}
+    if(field==='name'||field==='notes') {
+      // Keep text fields mounted so tabbing or clicking into the next field stays smooth.
+      save();renderChrome();renderRoles();renderCoverage();
+      if(field==='name') {
+        row.querySelector('input[data-field="name"]').value=m.name;
+        ['name','cls','race','main','status'].forEach(key=>{
+          const fieldEl=row.querySelector(`[data-field="${key}"]`);
+          const label={name:'Member name',cls:'Class',race:'Race',main:'Primary spec',status:'Status'}[key];
+          fieldEl?.setAttribute('aria-label',`${label} for ${m.name}`);
+        });
+        row.querySelector('.options-toggle')?.setAttribute('aria-label',`Details for ${m.name}`);
+      }
+      suggestion=null;
+      return;
+    }
     commit();
     const focusSelector=backup?`[data-backup="${CSS.escape(backup)}"]`:`[data-field="${field}"]`;
     const el=$('rosterBody').querySelector(`[data-member="${CSS.escape(m.id)}"] ${focusSelector}`);el?.focus({preventScroll:true});
   });
   $('rosterBody').addEventListener('click',event=>{
     const btn=event.target.closest('[data-action]');if(!btn)return;const action=btn.dataset.action;
-    if(action==='add')return openAdd();if(action==='example')return loadExample();if(action==='clear-filters'){$('search').value='';$('statusFilter').value='all';renderRoster();return;}
+    if(action==='add')return openAdd();if(action==='paste')return openBulk();if(action==='example')return loadExample();if(action==='clear-filters'){$('search').value='';$('statusFilter').value='all';renderRoster();return;}
     const id=btn.closest('[data-member]')?.dataset.member,m=state.members.find(m=>m.id===id);if(!m)return;
-    if(action==='expand'){expanded.has(id)?expanded.delete(id):expanded.add(id);renderRoster();$('rosterBody').querySelector(`[data-member="${CSS.escape(id)}"] [data-action="expand"]`)?.focus({preventScroll:true});}
+    if(action==='expand'){expanded.has(id)?expanded.delete(id):expanded.add(id);renderRoster();$('rosterBody').querySelector(`[data-member="${CSS.escape(id)}"] .options-toggle`)?.focus({preventScroll:true});}
     if(action==='delete'&&confirm(`Remove ${m.name} from this roster?`)){state.members=state.members.filter(m=>m.id!==id);expanded.delete(id);commit();toast(`${m.name} removed.`);}
   });
   $('loadExample').addEventListener('click',loadExample);
@@ -135,10 +201,33 @@
   $('suggestLineup').addEventListener('click',()=>{
     suggestion=E.suggest(state,$('scenarioMode').value);
     const missing=suggestion.missing.filter(r=>r.count),unconfirmed=suggestion.assignments.filter(m=>m.unconfirmed);
-    $('lineupContent').innerHTML=`<div class="lineup-summary">${suggestion.assignments.length} / ${suggestion.total} target spots filled<small>${$('scenarioMode').value==='potential'?'All class possibilities':'Primary + backup specs, with flexible undecided members'} · Each player appears once.</small></div>${missing.length?`<p class="warning">Open spots: ${missing.map(m=>`${m.count} ${m.role.toLowerCase()}`).join(' · ')}.</p>`:''}${unconfirmed.length?`<p class="warning">${unconfirmed.length} suggestion${unconfirmed.length===1?' needs':'s need'} player confirmation.</p>`:''}${roles.map(role=>`<h3 class="lineup-role">${role==='Ranged'||role==='Melee'?role+' DPS':role+'s'}</h3>${suggestion.assignments.filter(m=>m.role===role).map(m=>`<div class="lineup-person"><span>${esc(m.name)}${m.unconfirmed?'<small>Class possibility · confirm with player</small>':m.changed?'<small>Uses selected backup</small>':''}</span><span>${esc(m.spec)}<small style="color:${D.GREAT_REROLL_CLASS_COLORS[m.cls]}">${m.cls}</small></span></div>`).join('')||'<p class="footnote">No members assigned.</p>'}`).join('')}${suggestion.unassigned.length?`<p class="lineup-unassigned">Outside this lineup: ${names(suggestion.unassigned)}.</p>`:''}<p class="footnote" style="margin-top:20px">Applying updates the listed members’ primary specs. Previous primary specs become backups. Other members keep their assignments and status.</p>`;
+    $('lineupContent').innerHTML=`<div class="lineup-summary">${suggestion.assignments.length} / ${suggestion.total} target spots filled<small>${$('scenarioMode').value==='potential'?'All class possibilities':'Primary + backup specs, with flexible undecided members'} · Each player appears once.</small></div>${missing.length?`<p class="warning">Open spots: ${missing.map(m=>`${m.count} ${m.role.toLowerCase()}`).join(' · ')}.</p>`:''}${unconfirmed.length?`<p class="warning">${unconfirmed.length} suggestion${unconfirmed.length===1?' needs':'s need'} player confirmation.</p>`:''}${roles.map(role=>`<h3 class="lineup-role">${role==='Ranged'||role==='Melee'?role+' DPS':role+'s'}</h3>${suggestion.assignments.filter(m=>m.role===role).map(m=>`<div class="lineup-person"><span>${esc(m.name)}${m.unconfirmed?'<small>Class possibility · confirm with player</small>':m.changed?'<small>Uses selected backup</small>':''}</span><span>${esc(m.spec)}<small style="color:${classColor(m.cls)}">${m.cls}</small></span></div>`).join('')||'<p class="footnote">No members assigned.</p>'}`).join('')}${suggestion.unassigned.length?`<p class="lineup-unassigned">Outside this lineup: ${names(suggestion.unassigned)}.</p>`:''}<p class="footnote" style="margin-top:20px">Applying updates the listed members’ primary specs. Previous primary specs become backups. Other members keep their assignments and status.</p>`;
     $('applyLineup').disabled=!suggestion.assignments.some(m=>m.changed);$('lineupDialog').showModal();
   });
   $('applyLineup').addEventListener('click',()=>{if(!suggestion)return;const count=suggestion.assignments.filter(a=>a.changed).length;suggestion.assignments.forEach(a=>{const m=state.members.find(m=>m.id===a.id);if(!m)return;const previous=m.main;m.main=a.spec;m.backups=[...new Set([...m.backups,...(previous&&previous!==m.main?[previous]:[])])].filter(s=>s!==m.main);});$('lineupDialog').close();commit();toast(`${count} primary spec${count===1?'':'s'} updated.`);});
   window.addEventListener('storage',event=>{if(event.key===KEY){storageBlocked=true;$('saveStatus').textContent='Changed in another tab — reload to continue';toast('This roster changed in another tab. Export your work before reloading.');}});
-  render();if(storageBlocked){$('saveStatus').textContent='Saved roster unavailable';toast(startupMessage);}
+  $('editGuild').addEventListener('click',()=>{$('guildDialog').showModal();$('guildName').focus();});
+  document.querySelectorAll('[data-view]').forEach(tab=>{
+    tab.addEventListener('click',()=>setView(tab.dataset.view));
+    tab.addEventListener('keydown',event=>{
+      const tabs=Array.from(document.querySelectorAll('[data-view]'));
+      const index=tabs.indexOf(tab);
+      let next;
+      if(event.key==='ArrowRight')next=(index+1)%tabs.length;
+      if(event.key==='ArrowLeft')next=(index+tabs.length-1)%tabs.length;
+      if(event.key==='Home')next=0;
+      if(event.key==='End')next=tabs.length-1;
+      if(next!==undefined){event.preventDefault();setView(tabs[next].dataset.view,true);}
+    });
+  });
+  document.addEventListener('click',event=>{
+    const target=event.target.closest('[data-go-view]');
+    if(target)setView(target.dataset.goView,true);
+    if(event.target.closest('[data-filter-undecided]')){
+      $('statusFilter').value='undecided';$('search').value='';renderRoster();$('statusFilter').focus();
+    }
+    if(!event.target.closest('.tools'))document.querySelector('.tools').open=false;
+  });
+  document.querySelectorAll('.tools button').forEach(btn=>btn.addEventListener('click',()=>{document.querySelector('.tools').open=false;}));
+  render();setView('roster');if(storageBlocked){$('saveStatus').textContent='Saved roster unavailable';toast(startupMessage);}
 })();
