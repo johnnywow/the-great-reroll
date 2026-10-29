@@ -20,3 +20,7 @@ Limits: 100 members, 100 target slots, 80-character names, 500-character notes, 
 ## Verification
 
 Run `node --test tests/*.test.cjs`. Guild coverage tests include competing flexible roles, bench exclusion, declared vs. potential availability, import normalization, safe CSV output, backup roundtrips, and 100 distinct assigned members.
+
+## Interface
+
+Guild Hall uses three keyboard-accessible views: Roster, Composition, and Spec coverage. The roster is a compact editable table with a role summary alongside it on desktop; narrow screens show member cards. Status is editable directly, while Details reveals backup specs and notes. Guild name and faction live in the guild settings dialog. New rosters see a short onboarding state instead of empty metrics. Coverage defaults to classes with active members; missing classes and count explanations are opt-in controls. The same storage key and backup format preserve existing rosters.
