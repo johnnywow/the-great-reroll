@@ -3,16 +3,18 @@
   const $ = id => document.getElementById(id);
   const D = window.GR_CHARACTER_DATA;
   const E = window.GuildRosterEngine.create(D);
+  const B = window.GuildRaidEngine.create(E);
+  let raidBoard;
   const roles = window.GuildRosterEngine.ROLES;
   const classColor = cls => ({Shaman:'#79b2ff',Warlock:'#b5a5e5',Warrior:'#d1b08a',Druid:'#ff9a58'}[cls] || D.GREAT_REROLL_CLASS_COLORS[cls] || '#b5a283');
   const KEY = 'war-table-guild-roster-v1';
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const option = (value, label, selected) => `<option value="${esc(value)}" ${selected===value?'selected':''}>${esc(label)}</option>`;
   const selectOptions = (values, selected, blank) => option('',blank,selected)+values.map(v=>option(v,v,selected)).join('');
-  const fresh = () => E.normalize({name:'My Guild',faction:'Horde',members:[]});
+  const fresh = () => B.normalize({name:'My Guild',faction:'Horde',members:[]});
   let state = fresh(), storageBlocked = false, startupMessage = '', suggestion = null, toastTimer;
   let expanded = new Set();
-  try {const saved=localStorage.getItem(KEY);if(saved)state=E.normalize(JSON.parse(saved));}
+  try {const saved=localStorage.getItem(KEY);if(saved)state=B.normalize(JSON.parse(saved));}
   catch(e) {storageBlocked=true;startupMessage='The saved roster could not be loaded. Export any current work, then start a new roster or import a backup.';}
   function toast(message) {clearTimeout(toastTimer);$('toast').textContent=message;$('toast').hidden=false;toastTimer=setTimeout(()=>$('toast').hidden=true,5500);}
   function save() {
@@ -20,12 +22,14 @@
     try {localStorage.setItem(KEY,JSON.stringify(state));$('saveStatus').textContent='Saved in this browser';}
     catch(e) {$('saveStatus').textContent='Could not save — export a backup';toast('Your changes are in this tab only. Export a backup to keep them.');}
   }
-  function commit() {suggestion=null;save();render();}
+  function commit() {suggestion=null;B.reconcile(state);save();render();}
   const names = list => list.length ? list.map(m=>esc(E.displayName(m))).join(', ') : 'None yet';
   function setView(view, focus = false) {
     const selected = ['roster','composition','coverage'].includes(view) ? view : 'roster';
     if(selected==='roster')renderRoster();
     if(selected==='coverage')renderCoverage();
+    if(selected==='composition')raidBoard?.render();
+    if(selected!=='composition'){document.body.classList.remove('board-focus');$('raidExpand').textContent='Expand board';$('raidExpand').setAttribute('aria-pressed','false');}
     document.querySelectorAll('[data-view]').forEach(tab => {
       const active=tab.dataset.view===selected;
       tab.setAttribute('aria-selected',String(active));
@@ -63,7 +67,7 @@
     const plan=E.suggest(state,$('scenarioMode').value);
     const missing=plan.missing.filter(r=>r.count);
     $('planningInsight').innerHTML=active.length?`<strong>${plan.assignments.length} of ${total} spots can be filled</strong><p>${missing.length?'Open roles: '+missing.map(r=>`${r.count} ${r.role.toLowerCase()}`).join(' · '):'Your current options cover every target.'}</p>`:'<strong>Your lineup starts with your roster</strong><p>Add members and choose their classes to explore a composition.</p><button class="text-button" data-go-view="roster">Go to roster →</button>';
-    $('rosterNextStep').innerHTML=!active.length?'<p>Mark members Active to include them in your composition.</p>':undecided?`<p>${undecided} active member${undecided===1?' still needs':'s still need'} a primary spec.</p><button class="text-button" data-filter-undecided>Review undecided members →</button>`:`<p>All active members have a primary spec.</p><button class="text-button" data-go-view="composition">Explore a lineup →</button>`;
+    $('rosterNextStep').innerHTML=!active.length?'<p>Mark members Active to include them in your composition.</p>':undecided?`<p>${undecided} active member${undecided===1?' still needs':'s still need'} a primary spec.</p><button class="text-button" data-filter-undecided>Review undecided members →</button>`:`<p>All active members have a primary spec.</p><button class="text-button" data-go-view="composition" data-role-planner>Explore a lineup →</button>`;
     $('suggestLineup').disabled=!active.some(m=>m.cls)||!total;
   }
   function renderRoster() {
@@ -98,6 +102,7 @@
     renderRoles();
     renderRoster();
     renderCoverage();
+    raidBoard?.refresh();
   }
   function syncAdd() {
     const cls=$('newClass').value;
@@ -111,9 +116,10 @@
     while(state.members.some(m=>m.id==='member-'+index)) index++;
     return E.member(raw,state.faction,index);
   }
+  const hasSavedWork=()=>state.members.length||state.plans.length>1||state.plans.some(p=>p.slots.some(Boolean)||p.notes||p.name!=='Raid night');
   function loadExample() {
-    if(state.members.length&&!confirm('Replace this roster with the example? Export a backup first if you want to keep it.'))return;
-    state=E.normalize({name:'The Unbroken · Example',faction:'Horde',targets:{Tank:2,Healer:2,Melee:3,Ranged:3},members:[
+    if(hasSavedWork()&&!confirm('Replace this roster and its raid plans with the example? Export a backup first if you want to keep them.'))return;
+    state=B.normalize({name:'The Unbroken · Example',faction:'Horde',targets:{Tank:2,Healer:2,Melee:3,Ranged:3},members:[
       {playerName:'Alex',name:'War Tusk',cls:'Warrior',race:'Troll',main:'Fury',backups:['Protection']},
       {playerName:'Sam',name:'Kill Roy',cls:'Rogue',race:'Undead',main:'Combat'},
       {playerName:'Jordan',name:'Ironhide',cls:'Druid',race:'Tauren',main:'Feral (Tank)',backups:['Restoration']},
@@ -134,7 +140,7 @@
   $('faction').addEventListener('change',()=>{
     const faction=$('faction').value;
     if(state.members.length&&!confirm(`Switch this roster to ${faction}? Race assignments that are unavailable for the selected class will be cleared.`)){$('faction').value=state.faction;return;}
-    state=E.normalize({...state,faction});expanded.clear();commit();
+    state=B.normalize({...state,faction});expanded.clear();commit();
   });
   $('targetInputs').addEventListener('change',event=>{
     const role=event.target.dataset.target;if(!role)return;
@@ -171,7 +177,7 @@
     else if(field){m[field]=event.target.value;if(field==='cls'){if(!E.races(state.faction,m.cls).includes(m.race))m.race='';m.main='';m.backups=[];}if(field==='main')m.backups=m.backups.filter(s=>s!==m.main);if(field==='name'||field==='playerName')m[field]=m[field].trim();}
     if(['name','playerName','notes'].includes(field)) {
       // Keep text fields mounted so tabbing or clicking into the next field stays smooth.
-      save();renderChrome();renderRoles();renderCoverage();
+      save();renderChrome();renderRoles();renderCoverage();raidBoard?.refresh();
       if(field==='name'||field==='playerName') {
         row.querySelector(`[data-field="${field}"]`).value=m[field];
         ['playerName','name','cls','race','main','status'].forEach(key=>{
@@ -196,11 +202,11 @@
     if(action==='delete'&&confirm(`Remove ${E.displayName(m)} from this roster?`)){state.members=state.members.filter(m=>m.id!==id);expanded.delete(id);commit();toast(`${E.displayName(m)} removed.`);}
   });
   $('loadExample').addEventListener('click',loadExample);
-  $('newRoster').addEventListener('click',()=>{if(state.members.length&&!confirm('Start a new roster? Export a backup first if you want to keep this one.'))return;state=fresh();storageBlocked=false;expanded.clear();$('search').value='';$('statusFilter').value='all';commit();});
+  $('newRoster').addEventListener('click',()=>{if(hasSavedWork()&&!confirm('Start a new roster and reset its raid plans? Export a backup first if you want to keep this work.'))return;state=fresh();storageBlocked=false;expanded.clear();$('search').value='';$('statusFilter').value='all';commit();});
   $('exportBackup').addEventListener('click',()=>download(JSON.stringify(state,null,2),'application/json','-roster.json'));
   $('exportCsv').addEventListener('click',()=>download(E.csv(state),'text/csv;charset=utf-8','-roster.csv'));
   $('importBackup').addEventListener('click',()=>$('importFile').click());
-  $('importFile').addEventListener('change',async()=>{const file=$('importFile').files[0];if(!file)return;try{if(file.size>1000000)throw new Error('Choose a roster backup smaller than 1 MB.');const incoming=E.normalize(JSON.parse(await file.text()));if(state.members.length&&!confirm(`Replace your current roster with ${incoming.name} (${incoming.members.length} members)?`))return;state=incoming;storageBlocked=false;expanded.clear();$('search').value='';$('statusFilter').value='all';commit();toast('Roster imported. Review any undecided assignments.');}catch(e){toast(e instanceof SyntaxError?'That file is not a valid JSON roster backup.':e.message);}finally{$('importFile').value='';}});
+  $('importFile').addEventListener('change',async()=>{const file=$('importFile').files[0];if(!file)return;try{if(file.size>1000000)throw new Error('Choose a roster backup smaller than 1 MB.');const incoming=B.normalize(JSON.parse(await file.text()));if(hasSavedWork()&&!confirm(`Replace your current roster and raid plans with ${incoming.name} (${incoming.members.length} members)?`))return;state=incoming;storageBlocked=false;expanded.clear();$('search').value='';$('statusFilter').value='all';commit();toast('Roster imported. Review any undecided assignments.');}catch(e){toast(e instanceof SyntaxError?'That file is not a valid JSON roster backup.':e.message);}finally{$('importFile').value='';}});
   document.querySelectorAll('[data-close]').forEach(btn=>btn.addEventListener('click',()=>btn.closest('dialog').close()));
   $('suggestLineup').addEventListener('click',()=>{
     suggestion=E.suggest(state,$('scenarioMode').value);
@@ -227,11 +233,13 @@
   document.addEventListener('click',event=>{
     const target=event.target.closest('[data-go-view]');
     if(target)setView(target.dataset.goView,true);
+    if(event.target.closest('[data-role-planner]')){$('rosterRolePlanner').open=true;$('rosterRolePlanner').scrollIntoView({block:'start'});}
     if(event.target.closest('[data-filter-undecided]')){
       $('statusFilter').value='undecided';$('search').value='';renderRoster();$('statusFilter').focus();
     }
     if(!event.target.closest('.tools'))document.querySelector('.tools').open=false;
   });
   document.querySelectorAll('.tools button').forEach(btn=>btn.addEventListener('click',()=>{document.querySelector('.tools').open=false;}));
+  raidBoard=window.GuildRaidBoard.create({E,B,D,getState:()=>state,save,toast});
   render();setView('roster');if(storageBlocked){$('saveStatus').textContent='Saved roster unavailable';toast(startupMessage);}
 })();

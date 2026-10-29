@@ -32,7 +32,18 @@
       const targets = {};
       ROLES.forEach(role => { const n = Number(raw.targets?.[role] ?? ({Tank:2,Healer:4,Melee:7,Ranged:7}[role])); targets[role] = Number.isFinite(n) ? Math.max(0,Math.min(100,Math.floor(n))) : 0; });
       if (Object.values(targets).reduce((a,b)=>a+b,0) > 100) throw new Error('Role targets must total 100 or fewer.');
-      return {version:1, name:String(raw.name || 'My Guild').slice(0,80), faction, targets, members:raw.members.map((r,i)=>member(r,faction,i))};
+      // Keep existing IDs stable: saved raid plans refer to members by ID.
+      const used = new Set();
+      const reserved = new Set(raw.members.map(r=>r?.id).filter(id=>/^member-\d{1,12}$/.test(id)));
+      const members = raw.members.map((r,i) => {
+        const preserve = /^member-\d{1,12}$/.test(r?.id) && !used.has(r.id);
+        let id = preserve ? r.id : 'member-' + i;
+        let next = i;
+        while (used.has(id)||(!preserve&&reserved.has(id))) id = 'member-' + (++next);
+        used.add(id);
+        return {...member(r,faction,i),id};
+      });
+      return {version:1, name:String(raw.name || 'My Guild').slice(0,80), faction, targets, members};
     }
     const roleFor = (m, name = m.main) => specs(m.cls).find(s => s.name === name)?.role || '';
     const displayName = m => m.playerName ? m.playerName + (m.name ? ` (${m.name})` : '') : m.name || 'Unnamed member';
