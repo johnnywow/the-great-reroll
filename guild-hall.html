@@ -4,76 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Guild Hall · The War Table</title>
-  <meta name="description" content="A clear view of your guild. Manage members, assign characters, and plan your composition.">
-  <link rel="stylesheet" href="css/guild-hall.css?v=4">
-  <link rel="stylesheet" href="css/guild-raid-board.css?v=1">
+  <link rel="canonical" href="https://wowwartable.com/guild-hall/">
+  <script>window.location.replace('guild-hall/' + window.location.search + window.location.hash);</script>
+  <noscript><meta http-equiv="refresh" content="0;url=guild-hall/"></noscript>
 </head>
 <body>
-  <a class="skip" href="#rosterSection">Skip to roster</a>
-  <header class="topbar">
-    <a class="brand" href="index.html"><span class="brand-symbol" aria-hidden="true">⚔</span> THE WAR TABLE</a>
-    <span class="nav-divider" aria-hidden="true">/</span><span class="product-name">Guild Hall</span>
-    <nav aria-label="Main navigation"><a href="index.html">All tools <span aria-hidden="true">↗</span></a><a href="index.html?guild-draft=1">Roster draft <span aria-hidden="true">↗</span></a></nav>
-  </header>
-  <main>
-    <section class="page-heading" aria-label="Guild workspace">
-      <div class="guild-identity"><div class="guild-mark" aria-hidden="true">⚔</div><div><div class="heading-line"><h1 id="guildTitle">My Guild</h1><button id="editGuild" class="icon-button" aria-label="Edit guild settings" title="Edit guild settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5 4 4M4 20l5-1L20 8a2.8 2.8 0 0 0-4-4L5 15l-1 5Z"/></svg></button></div><p id="guildSubtitle" class="muted">Horde · Guild roster planner</p></div></div>
-      <div class="workspace-actions"><div class="save-state"><span class="save-dot" aria-hidden="true"></span><span id="saveStatus" role="status">Saved in this browser</span></div><details class="tools"><summary>Manage roster <span aria-hidden="true">⌄</span></summary><div><button id="exportBackup">Download backup</button><button id="importBackup">Import backup</button><button id="exportCsv">Export CSV</button><hr><button id="loadExample">Load example roster</button><button id="newRoster">Start a new roster</button></div></details><input id="importFile" type="file" accept="application/json,.json" hidden></div>
-    </section>
-    <div class="workspace-tabs" role="tablist" aria-label="Guild views">
-      <button id="rosterTab" role="tab" aria-selected="true" aria-controls="rosterView" data-view="roster"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2M17 5a3 3 0 0 1 0 6M18 15a5 5 0 0 1 3 5"/></svg>Roster <span id="memberCount" class="count">0</span></button>
-      <button id="compositionTab" role="tab" aria-selected="false" aria-controls="compositionView" tabindex="-1" data-view="composition"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>Raid board</button>
-      <button id="coverageTab" role="tab" aria-selected="false" aria-controls="coverageView" tabindex="-1" data-view="coverage"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Spec coverage</button>
-    </div>
-    <section id="rosterView" role="tabpanel" aria-labelledby="rosterTab">
-      <div class="roster-layout">
-        <section id="rosterSection" class="panel roster-panel" aria-label="Guild roster">
-          <div class="section-head"><div><h2>Members</h2><p class="muted" id="rosterHint">Your people, their characters, and where they fit.</p></div><div class="actions"><button id="bulkAdd" class="secondary">Paste names</button><button id="addMember" class="primary"><span aria-hidden="true">+</span> Add member</button></div></div>
-          <div class="roster-filters" id="rosterFilters"><label class="search-label"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><span class="sr-only">Search roster</span><input id="search" placeholder="Search players or characters…" type="search"></label><label><span class="sr-only">Filter roster status</span><select id="statusFilter"><option value="all">All members</option><option value="active">Active only</option><option value="bench">Bench only</option><option value="undecided">Needs a spec</option></select></label><span id="visibleCount"></span></div>
-          <div id="rosterBody"></div>
-          <div class="roster-footer" id="rosterFooter"><span>Click any field to edit. <span class="details-hint">Use Details for backup specs and notes.</span></span><span class="local-note">Auto-saved locally</span></div>
-        </section>
-        <aside id="rosterOverview" class="overview panel" aria-label="Roster overview" hidden>
-          <div class="aside-heading"><h2>At a glance</h2><button class="text-button" data-go-view="composition" data-role-planner>Edit targets</button></div>
-          <div class="total-card"><div><strong id="activeCount">0</strong><span id="targetCount">/ 20 target</span></div><p id="rosterMeta">0 bench · 0 need a spec</p></div>
-          <div id="roleCards" class="role-cards"></div>
-          <div id="rosterNextStep" class="next-step"></div>
-          <button class="secondary full" data-go-view="coverage">View spec coverage <span aria-hidden="true">→</span></button>
-        </aside>
-      </div>
-    </section>
-    <section id="compositionView" role="tabpanel" aria-labelledby="compositionTab" hidden>
-      <div id="raidPlanner" class="raid-planner">
-        <div class="raid-heading"><div><h2>Build your raid</h2><p class="muted">Your buddies. Your groups. A plan for every raid.</p></div><button id="raidExpand" class="secondary" aria-pressed="false">Expand board</button></div>
-        <div class="raid-toolbar"><label class="raid-plan-picker"><span class="sr-only">Saved raid plan</span><select id="raidPlanSelect"></select></label><div class="actions"><button id="raidSettings" class="secondary">Plan settings</button><button id="raidDuplicate" class="secondary">Duplicate</button><button id="raidUndo" class="secondary" disabled>↶ Undo</button><button id="raidNew" class="primary">+ New plan</button></div></div>
-        <div class="raid-workspace">
-          <aside class="raid-palette panel" aria-label="Cards to place"><div class="palette-heading"><h3>Build your lineup</h3><p>Drag a card, or select and place.</p></div><div class="palette-switch" role="group" aria-label="Card source"><button id="paletteRoster" aria-pressed="true">Your roster</button><button id="paletteClasses" aria-pressed="false">Class cards</button></div><label id="paletteSearchLabel" class="palette-filter"><span class="sr-only">Find a roster member</span><input id="paletteSearch" type="search" placeholder="Search buddies or classes…"></label><label id="paletteRaceLabel" class="palette-filter" hidden>Race<select id="paletteRace"></select></label><div id="raidPalette" class="raid-palette-list"></div><p id="paletteFooter" class="palette-footnote"></p></aside>
-          <div class="raid-canvas"><div class="raid-canvas-heading"><div><h3 id="raidBoardTitle"></h3><p id="raidBoardSize"></p></div><div id="raidTotals" class="raid-totals"></div></div><div id="raidRoleSummary" class="raid-role-summary" aria-label="Planned role totals"></div><div id="raidSelection" class="raid-selection" hidden><span id="raidSelectionText"></span><button id="raidCancelSelection" class="text-button">Cancel</button></div><div id="raidGroups" class="raid-groups"></div><div class="raid-canvas-footer"><span>Drag cards between groups to move or swap.</span><span>Click a card to choose its race, spec, or player.</span></div><details id="raidNotes" class="raid-notes" hidden><summary>Raid notes</summary><p id="raidNotesText"></p></details></div>
-        </div>
-        <div id="raidAnnouncement" class="sr-only" role="status" aria-live="polite"></div>
-      </div>
-      <details id="rosterRolePlanner" class="roster-role-planner"><summary>Roster-wide role planner <span>Explore possible specs across your whole guild</span></summary>
-      <div class="view-heading"><div><h2>Build your composition</h2><p class="muted">Set a role mix and explore how your members could fill it.</p></div><span class="subtle-badge">One player per spot</span></div>
-      <div class="composition-layout">
-        <section class="panel planning-panel"><div class="section-head"><div><span class="step-number">1</span><h3>Set your targets</h3><p class="muted">Choose the number of spots for each role.</p></div><span id="targetTotal" class="subtle-badge">20 spots</span></div><div id="targetInputs" class="target-inputs"></div><p class="footnote">These are your planning goals. Adjust them for your raid or group.</p></section>
-        <section class="panel lineup-panel"><div class="section-head"><div><span class="step-number">2</span><h3>Find a lineup</h3><p class="muted">Choose how flexible your roster can be.</p></div></div><div class="lineup-controls"><label class="scenario-label">Consider these specs<select id="scenarioMode"><option value="declared">Primary + backup specs</option><option value="potential">All class possibilities</option></select></label><p class="footnote" id="scenarioHelp">Members without a primary spec can fill any spec their class offers.</p><div id="planningInsight" class="insight"></div><button id="suggestLineup" class="primary full">Suggest a lineup <span aria-hidden="true">→</span></button><p class="footnote">You’ll review the suggestions before applying changes.</p></div></section>
-      </div>
-      </details>
-    </section>
-    <section id="coverageView" role="tabpanel" aria-labelledby="coverageTab" hidden>
-      <div class="view-heading"><div><h2>See your spec options</h2><p class="muted">Primary assignments, selected backups, and the possibilities in your roster.</p></div><label class="checkbox"><input id="showEmpty" type="checkbox"> Include missing classes</label></div>
-      <details class="coverage-guide"><summary>How to read these counts <span aria-hidden="true">⌄</span></summary><div><p><strong>Assigned</strong> Members with this primary spec.</p><p><strong>Backup</strong> Members who have selected this as an alternative.</p><p><strong>Possible</strong> Every active member of this class, including assigned players.</p><p class="footnote">These groups overlap. Each player can fill only one spec at a time. Bench members are excluded.</p></div></details>
-      <div id="coverageGrid" class="coverage-grid"></div>
-    </section>
-    <footer><span><span class="save-dot" aria-hidden="true"></span> Your roster stays in this browser. Download a backup to keep a copy.</span><span>Unofficial WoW toolkit · <a href="index.html">The War Table</a></span></footer>
-  </main>
-  <dialog id="guildDialog" aria-labelledby="guildDialogTitle"><div class="dialog-head"><div><h2 id="guildDialogTitle">Guild settings</h2><p class="muted">Name your roster and choose your faction.</p></div><button type="button" data-close class="icon-button" aria-label="Close">×</button></div><label>Guild name<input id="guildName" maxlength="80" placeholder="My Guild"></label><label>Faction<select id="faction"><option>Horde</option><option>Alliance</option></select></label><div class="dialog-actions"><button data-close class="primary">Done</button></div></dialog>
-  <dialog id="memberDialog" aria-labelledby="memberDialogTitle"><form id="memberForm"><div class="dialog-head"><div><h2 id="memberDialogTitle">Add a member</h2><p class="muted">Add your buddy’s name or nickname. Their character can come later.</p></div><button type="button" data-close class="icon-button" aria-label="Close">×</button></div><div class="form-grid"><label>Player name<input id="newPlayerName" maxlength="80" placeholder="e.g. Alex" autocomplete="off"></label><label>Character name <span class="muted">(optional)</span><input id="newName" maxlength="80" placeholder="e.g. War Tusk" autocomplete="off"></label></div><div class="form-grid"><label>Class<select id="newClass"></select></label><label>Race<select id="newRace"></select></label><label>Primary spec<select id="newSpec"></select></label><label>Status<select id="newStatus"><option value="active">Active roster</option><option value="bench">Bench</option></select></label></div><button class="primary full" type="submit">Add to roster</button></form></dialog>
-  <dialog id="bulkDialog" aria-labelledby="bulkTitle"><form id="bulkForm"><div class="dialog-head"><div><h2 id="bulkTitle">Add your guild</h2><p class="muted">Paste one name per line. Choose whether these are your buddies or their characters.</p></div><button type="button" data-close class="icon-button" aria-label="Close">×</button></div><label>These are<select id="bulkNameType"><option value="playerName">Player names</option><option value="name">Character names</option></select></label><label>Names<textarea id="bulkNames" rows="8" maxlength="8100" required placeholder="Alex&#10;Sam&#10;Jordan"></textarea></label><button class="primary full">Add members</button></form></dialog>
-  <dialog id="lineupDialog" aria-labelledby="lineupTitle"><div class="dialog-head"><div><h2 id="lineupTitle">Suggested lineup</h2><p class="muted">Review your composition before making changes.</p></div><button type="button" data-close class="icon-button" aria-label="Close">×</button></div><div id="lineupContent"></div><div class="dialog-actions"><button data-close class="secondary">Keep exploring</button><button id="applyLineup" class="primary">Apply suggested specs</button></div></dialog>
-  <dialog id="raidPlanDialog" aria-labelledby="raidPlanDialogTitle"><form id="raidPlanForm"><div class="dialog-head"><div><h2 id="raidPlanDialogTitle">New raid plan</h2><p class="muted">Save a separate lineup for a raid, dungeon, or night with your buddies.</p></div><button type="button" class="icon-button" data-raid-close aria-label="Close plan settings">×</button></div><label>Plan name<input id="raidPlanName" maxlength="80" required placeholder="e.g. Friday raid · Progression"></label><label>Group size<select id="raidPlanSize"></select></label><label>Notes <span class="muted">(optional)</span><textarea id="raidPlanNoteInput" maxlength="1000" rows="3" placeholder="Boss strategy, swaps, or who is available"></textarea></label><p id="raidPlanError" class="warning" role="alert"></p><div class="dialog-actions"><button id="raidDelete" type="button" class="secondary delete">Delete plan</button><button type="button" data-raid-close class="secondary">Cancel</button><button id="raidPlanSave" type="submit" class="primary">Create plan</button></div></form></dialog>
-  <dialog id="raidSlotDialog" aria-labelledby="raidSlotTitle"><form id="raidSlotForm"><div class="dialog-head"><div class="raid-slot-dialog-title"><span id="raidSlotPortrait"></span><h2 id="raidSlotTitle">Edit card</h2></div><button type="button" class="icon-button" data-raid-close aria-label="Close card editor">×</button></div><label>Assign player<select id="raidSlotMember"></select></label><div class="form-grid"><label>Class<select id="raidSlotClass"></select></label><label>Race<select id="raidSlotRace"></select></label></div><label>Spec for this plan<select id="raidSlotSpec"></select></label><p id="raidSlotHelp" class="footnote"></p><p id="raidSlotError" class="warning" role="alert"></p><div class="dialog-actions"><button type="button" data-raid-close class="secondary">Cancel</button><button type="submit" class="primary">Save card</button></div></form></dialog>
-  <div id="toast" role="status" aria-live="polite" hidden></div>
-  <script src="data/characters.js"></script><script src="js/guild-roster-engine.js?v=3"></script><script src="js/guild-raid-engine.js?v=1"></script><script src="js/guild-raid-board.js?v=1"></script><script src="js/guild-hall.js?v=4"></script>
+  <p>Guild Hall has moved to <a href="guild-hall/">wowwartable.com/guild-hall/</a>.</p>
 </body>
 </html>
