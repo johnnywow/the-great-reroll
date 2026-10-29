@@ -18,7 +18,8 @@
       const cls = availableClasses(faction).includes(r.cls) ? r.cls : '';
       const allowed = specs(cls).map(s => s.name);
       const main = allowed.includes(r.main) ? r.main : '';
-      return {id: 'member-' + index, name: String(r.name || '').trim().slice(0,80) || 'Member ' + (index+1), cls,
+      const playerName = String(r.playerName || '').trim().slice(0,80);
+      return {id: 'member-' + index, playerName, name: String(r.name || '').trim().slice(0,80) || (playerName ? '' : 'Member ' + (index+1)), cls,
         race: races(faction, cls).includes(r.race) ? r.race : '', main,
         backups: [...new Set(Array.isArray(r.backups) ? r.backups : [])].filter(s => allowed.includes(s) && s !== main),
         status: r.status === 'bench' ? 'bench' : 'active', notes: String(r.notes || '').slice(0,500)};
@@ -34,6 +35,7 @@
       return {version:1, name:String(raw.name || 'My Guild').slice(0,80), faction, targets, members:raw.members.map((r,i)=>member(r,faction,i))};
     }
     const roleFor = (m, name = m.main) => specs(m.cls).find(s => s.name === name)?.role || '';
+    const displayName = m => m.playerName ? m.playerName + (m.name ? ` (${m.name})` : '') : m.name || 'Unnamed member';
     function candidates(m, mode = 'declared') {
       const all = specs(m.cls);
       return mode === 'potential' || !m.main ? all : all.filter(s => s.name === m.main || m.backups.includes(s.name));
@@ -67,16 +69,16 @@
         const m=active[owner], role=slots[i].role;
         const list=candidates(m,mode).filter(s=>s.role===role);
         const spec=list.find(s=>s.name===m.main)?.name || list.find(s=>m.backups.includes(s.name))?.name || list[0].name;
-        return [{id:m.id,name:m.name,cls:m.cls,role,spec,changed:m.main!==spec,unconfirmed:!m.main || (spec!==m.main && !m.backups.includes(spec))}];
+        return [{id:m.id,name:m.name,playerName:m.playerName,cls:m.cls,role,spec,changed:m.main!==spec,unconfirmed:!m.main || (spec!==m.main && !m.backups.includes(spec))}];
       });
       const assigned = new Set(assignments.map(m=>m.id));
       return {assignments, missing:ROLES.map(role=>({role,count:slots.filter((s,i)=>s.role===role && owners[i]===-1).length})), unassigned:active.filter(m=>!assigned.has(m.id)), total:slots.length};
     }
     function csv(state) {
       const safe=v=>{let s=String(v??'');if(/^[\s]*[=+@-]/.test(s))s="'"+s;return '"'+s.replaceAll('"','""')+'"';};
-      return [['Member','Faction','Class','Race','Primary spec','Backup specs','Status','Notes'],...state.members.map(m=>[m.name,state.faction,m.cls,m.race,m.main,m.backups.join('; '),m.status,m.notes])].map(row=>row.map(safe).join(',')).join('\r\n');
+      return [['Player name','Character name','Faction','Class','Race','Primary spec','Backup specs','Status','Notes'],...state.members.map(m=>[m.playerName,m.name,state.faction,m.cls,m.race,m.main,m.backups.join('; '),m.status,m.notes])].map(row=>row.map(safe).join(',')).join('\r\n');
     }
-    return {classes, specs, races, availableClasses, member, normalize, roleFor, candidates, coverage, suggest, csv};
+    return {classes, specs, races, availableClasses, member, normalize, roleFor, displayName, candidates, coverage, suggest, csv};
   }
   return {create, ROLES};
 });
