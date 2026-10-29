@@ -1,0 +1,138 @@
+/* Raid board: a focused canvas with reusable roster and class cards. */
+.raid-heading { display:flex; align-items:center; justify-content:space-between; gap:18px; margin-bottom:20px; }
+.raid-heading h2 { font-size:23px; letter-spacing:-.5px; }
+.raid-heading p { font-size:12px; margin-top:4px; }
+.raid-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin-bottom:20px; }
+.raid-plan-picker { flex:1; max-width:360px; min-width:200px; }
+.raid-plan-picker select { margin:0; min-height:38px; background:#20242b; font-weight:600; }
+.raid-toolbar>.actions { margin-left:auto; }
+.raid-workspace { display:grid; grid-template-columns:236px minmax(0,1fr); gap:18px; align-items:start; }
+.raid-palette { overflow:hidden; position:sticky; top:18px; }
+.palette-heading { padding:18px 16px 12px; }
+.palette-heading h3 { font-size:13px; }
+.palette-heading p { margin-top:4px; color:#909bac; font-size:11px; }
+.palette-switch { display:flex; padding:0 12px; gap:5px; }
+.palette-switch button { flex:1; background:#14181e; font-size:11px; padding:6px; border-color:transparent; }
+.palette-switch [aria-pressed=true] { color:#f0ce91; background:#353026; border-color:#6a5636; }
+.palette-filter { padding:0 12px; margin:12px 0; font-size:11px; }
+.palette-filter input,.palette-filter select { min-height:34px; font-size:11px; }
+.raid-palette-list { padding:0 10px 10px; display:flex; flex-direction:column; gap:7px; max-height:620px; overflow:auto; scrollbar-width:thin; }
+.palette-card { display:flex; align-items:center; justify-content:flex-start; gap:9px; width:100%; text-align:left; padding:10px; min-height:65px; background:#20252c; border-color:#323b46; border-left:2px solid var(--class); cursor:grab; }
+.palette-card>img,.palette-card>.raid-avatar { width:30px; height:38px; border-radius:4px; object-fit:cover; flex-shrink:0; }
+.palette-card>span:not(.drag-grip):not(.raid-avatar) { flex:1; min-width:0; }
+.palette-card strong { color:var(--class); display:block; font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.palette-card small { display:block; color:#a7b3c4; font-size:10px; font-weight:400; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.palette-card .palette-meta { color:#8c99aa; margin-top:3px; font-size:9px; }
+.palette-card.on-board { opacity:.5; cursor:default; }
+.drag-grip { color:#7d8897; font-size:19px; }
+.palette-footnote { color:#939fb0; font-size:10px; line-height:1.7; margin:0; padding:12px 15px 16px; border-top:1px solid #2b323c; }
+.palette-empty { padding:25px 7px; font-size:12px; text-align:center; }
+.palette-empty p { color:var(--muted); margin:7px 0 15px; font-size:11px; }
+.raid-canvas { min-width:0; border:1px solid #343b45; border-radius:9px; background:radial-gradient(circle at 50% 0%,#232c38aa,transparent 65%),#12171e; padding:21px 18px 14px; }
+.raid-canvas-heading { display:flex; justify-content:space-between; align-items:flex-start; gap:15px; padding:0 2px 15px; }
+.raid-canvas-heading h3 { font-size:19px; letter-spacing:-.3px; overflow-wrap:anywhere; }
+.raid-canvas-heading p { font-size:11px; color:#97a6ba; margin-top:4px; }
+.raid-totals { text-align:right; flex-shrink:0; }
+.raid-totals>strong { display:block; font-size:23px; color:#ece5d4; line-height:1.2; }
+.raid-totals strong span { font-size:12px; font-weight:400; color:#a9b4c3; }
+.raid-totals>span { display:block; color:#98a7ba; font-size:10px; margin-top:6px; }
+.raid-role-summary { display:flex; flex-wrap:wrap; gap:9px 18px; padding:12px 2px 17px; border-top:1px solid #333c49; font-size:11px; }
+.raid-role-summary>span { display:flex; align-items:center; gap:6px; color:#aebaca; }
+.raid-role-summary i { width:6px; height:6px; background:var(--role); border-radius:50%; }
+.raid-role-summary strong { color:#e2e8f0; font-size:12px; font-weight:600; }
+.raid-groups { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
+.raid-groups:has(>.raid-group:only-child) { grid-template-columns:minmax(0,340px); justify-content:center; }
+.raid-groups:has(>.raid-group:nth-child(2):last-child) { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.raid-group { min-width:0; background:#11161dcc; border:1px solid #303a48; border-radius:8px; padding:9px; }
+.raid-group-head { display:flex; align-items:center; justify-content:space-between; padding:3px 2px 12px; }
+.raid-group-head h3 { font-size:11px; font-weight:600; color:#d4dce7; }
+.raid-group-head h3 span { color:#8b9cb3; margin-right:6px; font-size:10px; font-weight:400; }
+.raid-group-head small { font-size:10px; color:#8596ac; }
+.raid-group-slots { display:flex; flex-direction:column; gap:8px; }
+.raid-slot { min-width:0; min-height:96px; position:relative; border-radius:6px; }
+.empty-raid-slot { width:100%; min-height:96px; display:flex; justify-content:flex-start; gap:9px; padding:15px 12px; background:#1a212b44; border:1px dashed #354356; color:#8c9db3; font-size:11px; text-align:left; }
+.empty-raid-slot>span:first-child { color:#6d829c; font-size:19px; font-weight:400; }
+.empty-raid-slot small { display:block; font-size:9px; font-weight:400; color:#788ba3; margin-top:3px; }
+.empty-raid-slot:hover { background:#263140 !important; border-color:#7b8c9f !important; }
+.raid-slot.filled { border:1px solid #394757; border-left:3px solid var(--class); background:#202a36; }
+.raid-slot.is-placeholder { border-style:dashed; border-left-style:solid; background:#222a32; }
+.raid-card-main { padding:10px 23px 9px 8px; display:flex; align-items:center; justify-content:flex-start; gap:8px; width:100%; min-height:94px; border:0; border-radius:4px; background:transparent; text-align:left; cursor:grab; }
+.raid-card-main>img,.raid-card-main>.raid-avatar { width:27px; height:39px; object-fit:cover; border-radius:3px; flex-shrink:0; }
+.raid-avatar { display:inline-flex; justify-content:center; align-items:center; background:#303a47; color:#abbcd0; }
+.raid-card-main>span:last-child { min-width:0; flex:1; }
+.raid-card-main strong { color:var(--class); font-size:12px; font-weight:600; display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.raid-card-main small { display:block; font-size:9px; font-weight:400; color:#afbed0; line-height:1.6; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.raid-spec { display:block; color:#e0d7bd; font-size:10px; font-weight:500; line-height:1.5; margin-top:4px; overflow-wrap:anywhere; }
+.raid-spec em { display:block; color:#92a3b8; font-size:8px; font-weight:400; font-style:normal; text-transform:uppercase; letter-spacing:.04em; }
+.raid-card-actions { position:absolute; top:4px; right:2px; display:flex; flex-direction:column; gap:2px; }
+.raid-card-actions button { min-height:22px; width:20px; padding:0; border:0; background:transparent; color:#96a9c1; font-size:15px; }
+.raid-card-actions button:hover { color:#fff; }
+.raid-card-main:hover { background:#2b394a !important; }
+.raid-selection { display:flex; align-items:center; justify-content:space-between; gap:15px; background:#3d3524; border:1px solid #8c7144; border-radius:5px; padding:8px 12px; margin-bottom:14px; font-size:11px; color:#f1d7ab; position:sticky; top:8px; z-index:3; }
+.raid-selection .text-button { flex-shrink:0; }
+.is-carrying .empty-raid-slot { border-color:#8a7047; background:#c6a2670a; }
+.is-carrying .raid-slot { transition:box-shadow .1s; }
+.raid-slot.drop-ready { outline:2px solid #edc67f; outline-offset:3px; box-shadow:0 0 20px #d6ab4d25; }
+.raid-slot.drop-ready .empty-raid-slot { background:#53492e; color:#fff; }
+.palette-card.is-picked,.raid-card-main.is-picked { outline:2px solid #ebc884; outline-offset:1px; }
+.raid-canvas-footer { display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px; padding-top:15px; font-size:9px; color:#8e9eb4; }
+.raid-notes { margin-top:15px; padding:12px; border-top:1px solid #384251; color:#acbad0; font-size:12px; }
+.raid-notes summary { cursor:pointer; }
+.raid-notes p { white-space:pre-wrap; overflow-wrap:anywhere; margin-top:10px; }
+.roster-role-planner { margin-top:24px; padding:16px 0; border-top:1px solid #303945; }
+.roster-role-planner>summary { font-size:12px; color:#c1ccdb; cursor:pointer; }
+.roster-role-planner>summary>span { font-size:11px; color:#8796ab; margin-left:10px; }
+.roster-role-planner[open]>summary { margin-bottom:24px; }
+.raid-slot-dialog-title { display:flex; gap:12px; align-items:center; }
+#raidSlotPortrait img,#raidSlotPortrait .raid-avatar { width:38px; height:48px; border-radius:5px; object-fit:cover; }
+#raidDelete { margin-right:auto; color:#e3a3a3; }
+.board-focus>.topbar,.board-focus .page-heading,.board-focus .workspace-tabs,.board-focus main>footer,.board-focus .roster-role-planner { display:none; }
+.board-focus main { max-width:1920px; padding-top:24px; }
+.board-focus .raid-palette-list { max-height:calc(100vh - 350px); }
+@media(min-width:1600px) { .board-focus .raid-groups { grid-template-columns:repeat(4,minmax(0,1fr)); } }
+@media(max-width:1200px) { .raid-workspace { grid-template-columns:215px minmax(0,1fr); gap:12px; } .raid-groups { grid-template-columns:repeat(3,minmax(0,1fr)); } .raid-canvas { padding:17px 12px 13px; } }
+@media(max-width:1000px) { .raid-groups { grid-template-columns:repeat(2,minmax(0,1fr)); } .raid-toolbar>.actions { gap:6px; } .raid-toolbar button { padding:7px 9px; } }
+@media(max-width:760px) {
+  .raid-workspace { grid-template-columns:minmax(0,1fr); }
+  .raid-palette { position:static; }
+  .palette-heading { padding:13px 14px 10px; }
+  .raid-palette-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); max-height:190px; }
+  .palette-footnote { padding:8px 13px; }
+  .raid-toolbar>.actions { margin-left:0; width:100%; justify-content:space-between; }
+  .raid-toolbar>.raid-plan-picker { max-width:none; width:100%; }
+  .raid-heading { margin-bottom:16px; }
+  .raid-heading h2 { font-size:20px; }
+  .raid-heading p { max-width:230px; }
+  .raid-heading>button { font-size:10px; padding:6px 8px; }
+  .raid-canvas-heading { flex-wrap:wrap; }
+  .raid-totals { text-align:left; }
+  .raid-role-summary { gap:9px 12px; }
+  .board-focus .raid-palette-list { max-height:160px; }
+  .roster-role-planner>summary>span { display:block; margin:5px 0 0; }
+}
+@media(max-width:500px) {
+  .raid-groups,.raid-groups:has(>.raid-group:nth-child(2):last-child) { grid-template-columns:minmax(0,1fr); }
+  .raid-card-main { min-height:82px; }
+  .raid-slot,.empty-raid-slot { min-height:84px; }
+  .raid-card-main>img { width:32px; height:44px; }
+  .raid-card-main strong { font-size:13px; }
+  .raid-card-main small { font-size:11px; }
+  .raid-spec { font-size:11px; }
+  .raid-group-head h3 { font-size:12px; }
+  .raid-group { padding:10px; }
+  .raid-card-actions button { width:29px; min-height:29px; }
+  .raid-card-main { padding-right:34px; }
+  .raid-selection { top:4px; }
+  .palette-card { padding:8px; }
+  .palette-card>img { width:24px; height:32px; }
+  .palette-card strong { font-size:11px; }
+  .palette-card small { font-size:9px; }
+  .drag-grip { display:none; }
+  .raid-toolbar button { font-size:10px; padding:6px 8px; }
+}
+.raid-selection { min-height:44px; }
+.raid-selection>span { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.raid-selection.is-idle { background:transparent; border-color:#303d4e; color:#96a7bd; }
+.palette-card,.raid-card-main { user-select:none; -webkit-user-select:none; }
+.palette-card>*,.raid-card-main>* { pointer-events:none; }
+.raid-card-actions button[data-select-slot] { cursor:grab; user-select:none; }
