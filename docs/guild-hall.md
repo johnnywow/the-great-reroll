@@ -4,7 +4,7 @@ Open `guild-hall.html`, or choose Guild Hall from the War Table homepage. The pr
 
 ## Planning model
 
-- One record represents one member's planned character. Class, race, and primary spec can remain undecided.
+- One record represents one member’s planned character. Player name (a real name or nickname) and character name are separate fields; either can be entered first. Class, race, and primary spec can remain undecided. Multiple alternate characters per player are not modeled.
 - Race eligibility, class colors, class icons, artwork, and spec labels reuse `data/characters.js`. These are the site's current planning assumptions, not a claim that current game rules or spec viability have been independently verified.
 - Primary specs count once in the active role totals. Explicit backup specs are shown separately. Bench members are excluded from all coverage and lineup calculations.
 - Spec coverage lists primary assignments, explicit backups, and all active members of that class as potential options. Potential counts overlap; they are not additive.
@@ -24,3 +24,5 @@ Run `node --test tests/*.test.cjs`. Guild coverage tests include competing flexi
 ## Interface
 
 Guild Hall uses three keyboard-accessible views: Roster, Composition, and Spec coverage. The roster is a compact editable table with a role summary alongside it on desktop; narrow screens show member cards. Status is editable directly, while Details reveals backup specs and notes. Guild name and faction live in the guild settings dialog. New rosters see a short onboarding state instead of empty metrics. Coverage defaults to classes with active members; missing classes and count explanations are opt-in controls. The same storage key and backup format preserve existing rosters.
+
+Player names appear above character names in editable roster rows. Search matches either name, and coverage and lineup details identify both. Paste names accepts either player names (default) or character names. Existing `name` fields remain character names; the optional `playerName` field is included in JSON backups and has its own CSV column. Old backups load with blank player names.

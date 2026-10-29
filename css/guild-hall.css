@@ -104,7 +104,9 @@ main { max-width: 1480px; padding: 0 36px 24px; margin: auto; }
 .member-row input, .member-row select { min-height: 31px; border: 1px solid transparent; background: transparent; padding: 5px 5px; font-size: 13px; border-radius: 4px; margin: 0; }
 .member-row input:hover, .member-row select:hover { border-color: #3c444e; background: #14191e; }
 .member-row input:focus, .member-row select:focus { background: #14191e; border-color: #706044; }
-.member-row input[data-field=name] { font-weight: 550; padding-left: 3px; }
+.member-row input[data-field=playerName] { font-weight: 600; padding-left: 3px; }
+.member-row input[data-field=name] { font-size: 11px; color: #a7b2c1; padding-left: 3px; min-height: 25px; }
+.member-names input::placeholder { color: #8d97a6; font-weight: 400; }
 .member-row select[data-field=cls] { color: var(--class); font-weight: 550; }
 .member-row select option { background: #181d23; color: var(--text); }
 .member-row select:disabled { color: #727c8b; opacity: 1; }
@@ -298,7 +300,8 @@ dialog form>.full { margin-top: 17px; }
   .member-row td:last-child { grid-column: 2; grid-row: 1; justify-self: end; align-self: center; }
   .mobile-label { display: block; font-size: 9px; color: #8c9bb0; letter-spacing: .02em; margin-bottom: 3px; }
   .member-row select { font-size: 12px; border-color: #394351; background: #151b23; padding: 6px 7px; min-height: 33px; }
-  .member-row input[data-field=name] { font-size: 13px; }
+  .member-row input[data-field=playerName] { font-size: 13px; }
+  .member-row input[data-field=name] { font-size: 12px; }
   .member-row .status-select { min-height: 33px !important; padding: 6px 7px !important; }
   .member-art { width: 30px; height: 34px; }
   .member-details, .member-details td { display: block; }
