@@ -1321,7 +1321,7 @@ setTimeout(grRemoveDuplicateClassText,0);
   }
 
   byId('grHomeLottery').onclick=()=>enterDraftTool('lottery');
-  byId('grHomeRoster').onclick=()=>enterDraftTool('roster');
+  byId('grHomeRoster').onclick=()=>{window.location.href='guild-hall.html';};
   byId('grHomeForge').onclick=enterForge;
   byId('grHomeButton').onclick=goHome;
 
@@ -1344,6 +1344,7 @@ setTimeout(grRemoveDuplicateClassText,0);
   body.classList.remove('gr-tool-view','name-forge-active');
   body.classList.add('gr-home-view');
   if(byId('modeBadge')) byId('modeBadge').textContent='OFFLINE MODE';
+  if(new URLSearchParams(window.location.search).has('guild-draft')) enterDraftTool('roster');
 })();
 
 
